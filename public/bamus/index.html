@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Vendored React UMD so the demo renders with zero external CDN dependency.
+     support.js skips its unpkg fetch when window.React/ReactDOM already exist. -->
+<script src="/bamus/vendor/react.production.min.js"></script>
+<script src="/bamus/vendor/react-dom.production.min.js"></script>
+<script src="/bamus/support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  ::-webkit-scrollbar{ width:10px; height:10px; }
+  ::-webkit-scrollbar-thumb{ background:#d6cdbe; border-radius:6px; border:2px solid #EEE9E0; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  @keyframes bamuspulse{ 0%{ box-shadow:0 0 0 0 rgba(62,157,110,.55);} 70%{ box-shadow:0 0 0 7px rgba(62,157,110,0);} 100%{ box-shadow:0 0 0 0 rgba(62,157,110,0);} }
+  @keyframes bamusdrawer{ from{ transform:translateX(-100%);} to{ transform:translateX(0);} }
+  .bamus{ --side-disp:flex; --mhead-disp:none; --topavatar-disp:flex; --topbar-pos:sticky; --page-pad:24px 28px 40px; --topbar-pad:15px 28px; --kpi-col:span 4; --wide-col:span 8; --mix-col:span 4; --half-col:span 6; --third-col:span 4; --bottomnav-disp:none; --live-full-disp:inline; --live-short-disp:none; }
+  @media (max-width:1080px){ .bamus{ --kpi-col:span 6; --wide-col:span 12; --mix-col:span 12; --half-col:span 12; --third-col:span 6; } }
+  @media (max-width:760px){ .bamus{ --side-disp:none; --mhead-disp:flex; --topavatar-disp:none; --topbar-pos:static; --kpi-col:span 12; --third-col:span 12; --page-pad:16px 14px 96px; --topbar-pad:12px 16px; --bottomnav-disp:flex; --live-full-disp:none; --live-short-disp:inline; } }
+</style>
+</helmet>
+
+<div class="bamus" style="--navy: {{ navy }}; --gold: {{ gold }}; --pad: {{ pad }}; --gap: {{ gap }}; display:flex; min-height:100vh; width:100%; font-family:'Hanken Grotesk',system-ui,-apple-system,sans-serif; color:#26323b; background:#EEE9E0; -webkit-font-smoothing:antialiased;">
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside style="width:248px; flex:none; background:linear-gradient(180deg, var(--navy,#1F4E79) 0%, color-mix(in srgb, var(--navy,#1F4E79) 80%, #0a1c2e) 100%); color:#eef3f8; display:var(--side-disp,flex); flex-direction:column; position:sticky; top:0; height:100vh;">
+    <div style="padding:26px 24px 22px; border-bottom:1px solid rgba(255,255,255,.10);">
+      <div style="display:flex; align-items:center; gap:11px;">
+        <div style="width:38px; height:38px; border-radius:10px; background:color-mix(in srgb, var(--gold,#C9A24B) 90%, #fff); display:flex; align-items:center; justify-content:center; font-family:'Spectral',serif; font-weight:600; font-size:21px; color:#2a2008;">B</div>
+        <div>
+          <div style="font-family:'Spectral',serif; font-size:20px; font-weight:600; letter-spacing:.2px; line-height:1;">Bamus</div>
+          <div style="font-size:10.5px; letter-spacing:1.4px; text-transform:uppercase; color:rgba(238,243,248,.62); margin-top:3px;">Suites &amp; Apartments</div>
+        </div>
+      </div>
+    </div>
+
+    <nav style="flex:1; padding:16px 14px; display:flex; flex-direction:column; gap:2px; overflow-y:auto;">
+      <div style="position:relative; display:flex; align-items:center; gap:11px; padding:11px 13px; border-radius:9px; font-size:14px; font-weight:600; color:#fff; background:rgba(255,255,255,.10); cursor:pointer;">
+        <span style="position:absolute; left:0; top:9px; bottom:9px; width:3px; border-radius:0 3px 3px 0; background:var(--gold,#C9A24B);"></span>
+        <span style="width:7px; height:7px; border-radius:2px; background:var(--gold,#C9A24B);"></span>Dashboard
+      </div>
+      <sc-for list="{{ nav }}" as="n" hint-placeholder-count="9">
+        <div style="display:flex; align-items:center; gap:11px; padding:11px 13px; border-radius:9px; font-size:14px; font-weight:500; color:rgba(238,243,248,.74); cursor:pointer; transition:background .15s,color .15s;" style-hover="background:rgba(255,255,255,.07); color:#fff;">
+          <span style="width:7px; height:7px; border-radius:2px; background:rgba(238,243,248,.30);"></span>{{ n.label }}
+        </div>
+      </sc-for>
+    </nav>
+
+    <div style="padding:14px 18px; border-top:1px solid rgba(255,255,255,.10); display:flex; align-items:center; gap:11px;">
+      <div style="width:38px; height:38px; border-radius:50%; flex:none; background:color-mix(in srgb, var(--gold,#C9A24B) 30%, var(--navy,#1F4E79)); border:2px solid var(--gold,#C9A24B); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff;">MG</div>
+      <div style="min-width:0;">
+        <div style="font-size:13.5px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Mustapha Garba</div>
+        <div style="font-size:11px; color:rgba(238,243,248,.60);">Owner · General Manager</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <main style="flex:1; min-width:0; display:flex; flex-direction:column; height:100vh; overflow-y:auto;">
+
+    <!-- mobile header -->
+    <div style="display:var(--mhead-disp,none); align-items:center; gap:12px; position:sticky; top:0; z-index:30; background:var(--navy,#1F4E79); color:#fff; padding:11px 16px;">
+      <button onClick="{{ openNav }}" aria-label="Open menu" style="width:38px; height:38px; border-radius:9px; border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.08); cursor:pointer; display:flex; flex-direction:column; gap:4px; align-items:center; justify-content:center; flex:none;">
+        <span style="width:16px; height:2px; background:#fff; border-radius:2px;"></span>
+        <span style="width:16px; height:2px; background:#fff; border-radius:2px;"></span>
+        <span style="width:16px; height:2px; background:#fff; border-radius:2px;"></span>
+      </button>
+      <div style="display:flex; align-items:center; gap:9px; flex:1; min-width:0;">
+        <div style="width:30px; height:30px; border-radius:8px; flex:none; background:color-mix(in srgb, var(--gold,#C9A24B) 90%, #fff); display:flex; align-items:center; justify-content:center; font-family:'Spectral',serif; font-weight:600; font-size:17px; color:#2a2008;">B</div>
+        <span style="font-family:'Spectral',serif; font-size:18px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Bamus Suites</span>
+      </div>
+      <div style="width:36px; height:36px; border-radius:50%; flex:none; background:color-mix(in srgb, var(--gold,#C9A24B) 30%, var(--navy,#1F4E79)); border:2px solid var(--gold,#C9A24B); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff;">MG</div>
+    </div>
+
+    <!-- topbar -->
+    <header style="position:var(--topbar-pos,sticky); top:0; z-index:20; background:rgba(238,233,224,.86); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-bottom:1px solid #E1D9CA; padding:var(--topbar-pad,15px 28px); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px 18px;">
+      <div>
+        <h1 style="margin:0; font-family:'Spectral',serif; font-size:23px; font-weight:600; color:#1d2932; letter-spacing:.2px;">Dashboard</h1>
+        <div style="font-size:12.5px; color:#857d6e; margin-top:2px;">{{ dateString }} · <span style="font-variant-numeric:tabular-nums; color:#5b6670; font-weight:500;">{{ timeString }}</span></div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:16px;">
+        <div style="display:flex; gap:5px; background:#fff; border:1px solid #E4DCCD; padding:4px; border-radius:11px;">
+          <sc-for list="{{ pills }}" as="pill" hint-placeholder-count="3">
+            <button style="{{ pill.style }}" onClick="{{ pill.onClick }}">{{ pill.label }}</button>
+          </sc-for>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:7px; padding:7px 12px; background:#fff; border:1px solid #E4DCCD; border-radius:10px; white-space:nowrap;">
+          <span style="width:8px; height:8px; border-radius:50%; flex:none; background:#3E9D6E; animation:bamuspulse 2.1s infinite;"></span>
+          <span style="font-size:12.5px; color:#5b6670; font-weight:500; display:var(--live-full-disp,inline);">Live · updated just now</span>
+          <span style="font-size:12.5px; color:#5b6670; font-weight:600; display:var(--live-short-disp,none);">Live</span>
+        </div>
+
+        <button aria-label="Notifications" style="position:relative; width:40px; height:40px; border-radius:11px; border:1px solid #E4DCCD; background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;" style-hover="background:#faf7f1;">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#5b6670" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span style="position:absolute; top:-5px; right:-5px; min-width:19px; height:19px; padding:0 5px; border-radius:10px; background:#C24B3E; color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; border:2px solid #EEE9E0;">5</span>
+        </button>
+
+        <div style="width:40px; height:40px; border-radius:50%; background:color-mix(in srgb, var(--gold,#C9A24B) 30%, var(--navy,#1F4E79)); border:2px solid var(--gold,#C9A24B); display:var(--topavatar-disp,flex); align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff;">MG</div>
+      </div>
+    </header>
+
+    <!-- content grid -->
+    <div style="display:grid; grid-template-columns:repeat(12,1fr); gap:var(--gap,18px); padding:var(--page-pad,24px 28px 40px); max-width:1560px; width:100%; margin:0 auto; align-items:start;">
+
+      <!-- ===== KPI: Revenue ===== -->
+      <div style="grid-column:var(--kpi-col,span 4); background:#fff; border:1px solid #E8E1D6; border-radius:14px; padding:var(--pad,20px); box-shadow:0 1px 2px rgba(31,40,50,.04);">
+        <span style="font-size:11px; font-weight:600; letter-spacing:.7px; text-transform:uppercase; color:#9a9384;">{{ revLabel }}</span>
+        <div style="font-size:33px; font-weight:700; color:#1d2932; margin-top:9px; font-variant-numeric:tabular-nums; letter-spacing:-.6px;">{{ k.revenue }}</div>
+        <div style="display:flex; align-items:center; gap:8px; margin-top:9px;">
+          <span style="display:inline-flex; align-items:center; gap:3px; background:#E7F3EC; color:#2E7D4F; font-size:12px; font-weight:600; padding:3px 9px; border-radius:999px;">▲ {{ k.revDelta }}</span>
+          <span style="font-size:12px; color:#9a9384;">{{ deltaNote }}</span>
+        </div>
+      </div>
+
+      <!-- ===== KPI: Occupancy ===== -->
+      <div style="grid-column:var(--kpi-col,span 4); background:#fff; border:1px solid #E8E1D6; border-radius:14px; padding:var(--pad,20px); box-shadow:0 1px 2px rgba(31,40,50,.04);">
+        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+          <span style="font-size:11px; font-weight:600; letter-spacing:.7px; text-transform:uppercase; color:#9a9384;">Occupancy</span>
+          <span style="font-size:12px; color:#9a9384; font-variant-numeric:tabular-nums;">{{ k.occSub }}</span>
+        </div>
+        <div style="font-size:33px; font-weight:700; color:#1d2932; margin-top:9px; font-variant-numeric:tabular-nums; letter-spacing:-.6px;">{{ k.occupancy }}</div>
+        <div style="display:flex; align-items:center; gap:8px; margin-top:11px;">
+          <span style="width:78px; font-size:12px; color:#6b7280; display:flex; align-items:center; gap:5px;"><span style="width:6px; height:6px; border-radius:2px; background:var(--navy,#1F4E79);"></span>Rooms</span>
+          <div style="flex:1; height:6px; background:#EFEAE0; border-radius:999px; overflow:hidden;"><div style="height:100%; width:{{ k.roomsW }}; background:var(--navy,#1F4E79); border-radius:999px;"></div></div>
+          <span style="font-size:11px; color:#9a9384; width:50px; text-align:right; font-variant-numeric:tabular-nums;">{{ k.roomsN }}</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+          <span style="width:78px; font-size:12px; color:#6b7280; display:flex; align-items:center; gap:5px;"><span style="width:6px; height:6px; border-radius:50%; background:#6FA0C8;"></span>Apartments</span>
+          <div style="flex:1; height:6px; background:#EFEAE0; border-radius:999px; overflow:hidden;"><div style="height:100%; width:{{ k.aptsW }}; background:#6FA0C8; border-radius:999px;"></div></div>
+          <span style="font-size:11px; color:#9a9384; width:50px; text-align:right; font-variant-numeric:tabular-nums;">{{ k.aptsN }}</span>
+        </div>
+      </div>
+
+      <!-- ===== KPI: Arrivals / Departures ===== -->
+      <div style="grid-column:var(--kpi-col,span 4); background:#fff; border:1px solid #E8E1D6; border-radius:14px; padding:var(--pad,20px); box-shadow:0 1px 2px rgba(31,40,50,.04);">
+        <span style="font-size:11px; font-weight:600; letter-spacing:.7px; text-transform:uppercase; color:#9a9384;">Arrivals / departures due</span>
+        <div style="display:flex; align-items:stretch; gap:18px; margin-top:11px;">
+          <div style="flex:1;">
+            <div style="display:flex; align-items:baseline; gap:6px;"><span style="font-size:33px; font-weight:700; color:#2E7D4F; font-variant-numeric:tabular-nums; letter-spacing:-.6px;">{{ k.arr }}</span><span style="font-size:13px; color:#2E7D4F; font-weight:600;">in</span></div>
+            <span style="font-size:12px; color:#9a9384;">Arrivals today</span>
+          </div>
+          <div style="width:1px; background:#EBE4D8;"></div>
+          <div style="flex:1;">
+            <div style="display:flex; align-items:baseline; gap:6px;"><span style="font-size:33px; font-weight:700; color:#C08A2E; font-variant-numeric:tabular-nums; letter-spacing:-.6px;">{{ k.dep }}</span><span style="font-size:13px; color:#C08A2E; font-weight:600;">out</span></div>
+            <span style="font-size:12px; color:#9a9384;">Departures today</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== KPI: Restaurant & Bar ===== -->
+      <div style="grid-column:var(--kpi-col,span 4); background:#fff; border:1px solid #E8E1D6; border-radius:14px; padding:var(--pad,20px); box-shadow:0 1px 2px rgba(31,40,50,.04);">
+        <span style="font-size:11px; font-weight:600; letter-spacing:.7px; text-transform:uppercase; color:#9a9384;">Restaurant &amp; bar sales</span>
+        <div style="font-size:33px; font-weight:700; color:#1d2932; margin-top:9px; font-variant-numeric:tabular-nums; letter-spacing:-.6px;">{{ k.fnb }}</div>
+        <div style="display:flex; align-items:center; gap:8px; margin-top:9px;">
+          <span style="display:inline-flex; align-items:center; gap:3px; background:#E7F3EC; color:#2E7D4F; font-size:12px; font-weight:600; padding:3px 9px; border-radius:999px;">▲ {{ k.fnbDelta }}</span>
+          <span style="font-size:12px; color:#9a9384;">{{ deltaNote }}</span>
+        </div>
+      </div>
+
+      <!-- ===== KPI: Outstanding ===== -->
+      <div style="grid-column:var(--kpi-col,span 4); background:#fff; border:1px solid #E8E1D6; border-radius:14px; padding:var(--pad,20px); box-shadow:0 1px 2px rgba(31,40,50,.04);">
+        <span style="font-size:11px; font-weight:600; letter-spacing:.7px; text-transform:uppercase; color:#9a9384;">Outstanding folios</span>
+        <div style="font-size:33px; font-weight:700; color:#B23A2C; margin-top:9px; font-variant-numeric:tabular-nums; letter-spacing:-.6px;">{{ k.outstanding }}</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:9px;">
+          <span style="font-size:12.5px; color:#9a9384;">{{ k.outSub }}</span>
+          <span style="font-size:12.5px; font-weight:600; color:var(--navy,#1F4E79); cursor:pointer;" style-hover="text-decoration:underline;">View folios →</span>
+        </div>
+      </div>
+
+      <!-- ===== KPI: Online payments (Premium) ===== -->
+      <sc-if value="{{ showPremium }}" hint-placeholder-val="{{ true }}">
+      <div style="grid-column:var(--kpi-col,span 4); background:linear-gradient(180deg,#fffdf7,#fff); border:1px solid color-mix(in srgb, var(--gold,#C9A24B) 35%, #E8E1D6); border-radius:14px; padding:var(--pad,20px); box-shadow:0 1px 2px rgba(31,40,50,.04);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <span style="font-size:11px; font-weight:600; letter-spacing:.7px; text-transform:uppercase; color:#9a9384;">Online payments today</span>
+          <span style="display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; letter-spacing:.6px; padding:3px 8px; border-radius:999px; background:color-mix(in srgb, var(--gold,#C9A24B) 20%, #fff); color:color-mix(in srgb, var(--gold,#C9A24B) 72%, #2a2008); border:1px solid color-mix(in srgb, var(--gold,#C9A24B) 45%, #fff);">PREMIUM</span>
+        </div>
+        <div style="font-size:33px; font-weight:700; color:#1d2932; margin-top:9px; font-variant-numeric:tabular-nums; letter-spacing:-.6px;">{{ k.online }}</div>
+        <div style="font-size:12.5px; color:#9a9384; margin-top:9px;">Collected via <span style="font-weight:600; color:#5b6670;">Paystack</span></div>
+      </div>
+      </sc-if>
+
+      <!-- ===== Revenue vs expenses ===== -->
+      <div style="grid-column:var(--wide-col,span 8); background:#fff; border:1px solid #E8E1D6; border-radius:14px; padding:var(--pad,20px); box-shadow:0 1px 2px rgba(31,40,50,.04);">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+          <div>
+            <div style="font-family:'Spectral',serif; font-size:17px; font-weight:600; color:#1d2932;">Revenue vs expenses</div>
+            <div style="font-size:12px; color:#9a9384; margin-top:2px;">Income, cost &amp; net profit · {{ trendLabel }}</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:15px; font-size:11.5px; color:#857d6e;">
+            <span style="display:flex; align-items:center; gap:6px;"><span style="width:11px; height:11px; border-radius:3px; background:var(--navy,#1F4E79);"></span>Revenue</span>
+            <span style="display:flex; align-items:center; gap:6px;"><span style="width:11px; height:11px; border-radius:3px; background:#C0795A;"></span>Expenses</span>
+          </div>
+        </div>
+
+        <!-- summary stats -->
+        <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;">
+          <div style="flex:1; min-width:120px; background:#FAF7F1; border-radius:11px; padding:11px 14px;">
+            <div style="font-size:11px; color:#9a9384; letter-spacing:.4px;">Revenue</div>
+            <div style="font-size:19px; font-weight:700; color:#1d2932; margin-top:3px; font-variant-numeric:tabular-nums; letter-spacing:-.3px;">{{ sumRevenue }}</div>
+          </div>
+          <div style="flex:1; min-width:120px; background:#FAF7F1; border-radius:11px; padding:11px 14px;">
+            <div style="font-size:11px; color:#9a9384; letter-spacing:.4px;">Expenses</div>
+            <div style="font-size:19px; font-weight:700; color:#B5613C; margin-top:3px; font-variant-numeric:tabular-nums; letter-spacing:-.3px;">{{ sumExpenses }}</div>
+          </div>
+          <div style="flex:1; min-width:120px; background:#EAF4EE; border:1px solid #D2E8DB; border-radius:11px; padding:11px 14px;">
+            <div style="font-size:11px; color:#5a8a6e; letter-spacing:.4px;">Net profit</div>
+            <div style="display:flex; align-items:baseline; gap:7px; margin-top:3px;">
+              <span style="font-size:19px; font-weight:700; color:#2E7D4F; font-variant-numeric:tabular-nums; letter-spacing:-.3px;">{{ sumProfit }}</span>
+              <span style="font-size:11.5px; font-weight:600; color:#3E9D6E;">{{ profitMargin }} margin</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- bar chart: revenue vs expenses -->
+        <div style="position:relative; height:200px; margin-top:18px;">
+          <!-- reference gridlines -->
+          <div style="position:absolute; left:0; right:0; top:0; bottom:22px; pointer-events:none;">
+            <div style="position:absolute; left:0; right:0; top:0; border-top:1px solid #EDE7DC;"></div>
+            <div style="position:absolute; left:0; right:0; top:33.3%; border-top:1px solid #F4F0E7;"></div>
+            <div style="position:absolute; left:0; right:0; top:66.6%; border-top:1px solid #F4F0E7;"></div>
+            <div style="position:absolute; left:0; right:0; bottom:0; border-top:1px solid #EDE7DC;"></div>
+          </div>
+
+          <!-- tooltip -->
+          <div style="{{ areaTipStyle }}">
+            <div style="font-weight:700; margin-bottom:4px; color:#fff;">{{ hoverLabel }}</div>
+            <div style="display:flex; justify-content:space-between; gap:14px;"><span style="color:rgba(255,255,255,.78);">Revenue</span><span style="font-weight:600; color:#fff; font-variant-numeric:tabular-nums;">{{ hoverRev }}</span></div>
+            <div style="display:flex; justify-content:space-between; gap:14px;"><span style="color:rgba(255,255,255,.78);">Expenses</span><span style="font-weight:600; color:#E8B79C; font-variant-numeric:tabular-nums;">{{ hoverExp }}</span></div>
+            <div style="display:flex; justify-content:space-between; gap:14px;"><span style="color:rgba(255,255,255,.78);">Profit</span><span style="font-weight:600; color:#8FD8AE; font-variant-numeric:tabular-nums;">{{ hoverProfit }}</span></div>
+          </div>
+
+          <!-- bars -->
+          <div style="position:absolute; left:0; right:0; top:0; bottom:22px; display:flex; align-items:flex-end; justify-content:space-between; gap:{{ groupGap }};">
+            <sc-for list="{{ bars }}" as="bar" hint-placeholder-count="7">
+              <div style="flex:1; height:100%; display:flex; align-items:flex-end; justify-content:center; gap:3px; cursor:default;" onMouseEnter="{{ bar.onEnter }}" onMouseLeave="{{ bar.onLeave }}" title="{{ bar.title }}">
+                <div style="{{ bar.revStyle }}"></div>
+                <div style="{{ bar.expStyle }}"></div>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- x labels -->
+          <div style="position:absolute; left:0; right:0; bottom:0; display:flex;">
+            <sc-for list="{{ bars }}" as="bar" hint-placeholder-count="7">
+              <span style="flex:1; text-align:center; font-size:10px; color:#9a9384; font-variant-numeric:tabular-nums;">{{ bar.label }}</span>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- expense breakdown -->
+        <div style="margin-top:18px; padding-top:16px; border-top:1px solid #EFE9DE;">
+          <div style="display:flex; align-items:baseline; justify-content:space-between;">
+            <div style="font-size:13px; font-weight:600; color:#3a4750;">Where expenses go</div>
+            <div style="font-size:11.5px; color:#9a9384;">Total <span style="font-weight:600; color:#B5613C; font-variant-numeric:tabular-nums;">{{ sumExpenses }}</span></div>
+          </div>
+          <div style="display:flex; gap:2px; height:13px; margin-top:11px; border-radius:999px; overflow:hidden;">
+            <sc-for list="{{ expenseCats }}" as="ec" hint-placeholder-count="6">
+              <div style="{{ ec.barStyle }}" title="{{ ec.title }}"></div>
+            </sc-for>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:9px 22px; margin-top:13px;">
+            <sc-for list="{{ expenseCats }}" as="ec" hint-placeholder-count="6">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="{{ ec.dotStyle }}"></span>
+                <span style="flex:1; font-size:12.5px; color:#3a4750; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ ec.label }}</span>
+                <span style="font-size:11.5px; color:#9a9384; font-variant-numeric:tabular-nums;">{{ ec.pct }}</span>
+                <span style="font-size:12px; font-weight:600; color:#1d2932; width:84px; text-align:right; font-variant-numeric:tabular-nums;">{{ ec.amount }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Revenue mix ===== -->
+      <div style="grid-column:var(--mix-col,span 4); background:#fff; border:1px solid #E8E1D6; border-radius:14px; padding:var(--pad,20px); box-shadow:0 1px 2px rgba(31,40,50,.04);">
+        <div style="font-family:'Spectral',serif; font-size:17px; font-weight:600; color:#1d2932;">Revenue mix</div>
+        <div style="position:relative; width:148px; height:148px; margin:14px auto 4px;">
+          <div style="width:148px; height:148px; border-radius:50%; background:{{ mixGradient }};"></div>
+          <div style="position:absolute; inset:22px; background:#fff; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+            <span style="font-size:10px; color:#9a9384; letter-spacing:.6px;">TOTAL</span>
+            <span style="font-size:14px; font-weight:700; color:#1d2932; font-variant-numeric:tabular-nums;">{{ mixTotal }}</span>
+          </div>
+        </div>
+        <div style="margin-top:10px;">
+          <sc-for list="{{ mix }}" as="m" hint-placeholder-count="4">
+            <div style="display:flex; align-items:center; gap:9px; margin-top:9px;">
+              <span style="{{ m.dotStyle }}"></span>
+              <span style="flex:1; font-size:13px; color:#3a4750;">{{ m.label }}</span>
+              <span style="font-size:12px; color:#9a9384; width:34px; text-align:right; font-variant-numeric:tabular-nums;">{{ m.pct }}</span>
+              <span style="font-size:12px; font-weight:600; color:#1d2932; width:90px; text-align:right; font-variant-numeric:tabular-nums;">{{ m.amount }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- ===== Unit status board ===== -->
+      <div style="grid-column:span 12; background:#fff; border:1px solid #E8E1D6; border-radius:14px; padding:var(--pad,20px); box-shadow:0 1px 2px rgba(31,40,50,.04);">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:14px;">
+          <div>
+            <div style="font-family:'Spectral',serif; font-size:17px; font-weight:600; color:#1d2932;">Unit status board</div>
+            <div style="font-size:12px; color:#9a9384; margin-top:2px;">30 rooms · 14 apartments · <span style="font-weight:600; color:#5b6670;">44 units</span></div>
+          </div>
+          <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:13px; font-size:11.5px; color:#5b6670;">
+              <sc-for list="{{ legend }}" as="lg" hint-placeholder-count="4">
+                <span style="display:flex; align-items:center; gap:5px;"><span style="{{ lg.dotStyle }}"></span>{{ lg.label }} <span style="color:#9a9384;">{{ lg.count }}</span></span>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:16px;">
+          <div style="display:flex; gap:4px; background:#F4F0E8; padding:4px; border-radius:9px;">
+            <sc-for list="{{ typeFilters }}" as="tf" hint-placeholder-count="3">
+              <button style="{{ tf.style }}" onClick="{{ tf.onClick }}">{{ tf.label }}</button>
+            </sc-for>
+          </div>
+          <div style="width:1px; height:22px; background:#E6DECF;"></div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <sc-for list="{{ statusFilters }}" as="sf" hint-placeholder-count="5">
+              <button style="{{ sf.style }}" onClick="{{ sf.onClick }}">{{ sf.label }} <span style="opacity:.62;">{{ sf.count }}</span></button>
+            </sc-for>
+          </div>
+          <span style="margin-left:auto; font-size:11.5px; color:#9a9384; display:flex; align-items:center; gap:7px;">
+            <span style="display:flex; align-items:center; gap:4px;"><span style="width:7px; height:7px; border-radius:2px; background:var(--navy,#1F4E79);"></span>Room</span>
+            <span style="display:flex; align-items:center; gap:4px;"><span style="width:7px; height:7px; border-radius:50%; background:var(--gold,#C9A24B);"></span>Apartment</span>
+          </span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(52px, 1fr)); gap:8px; margin-top:16px;">
+          <sc-for list="{{ units }}" as="unit" hint-placeholder-count="44">
+            <div style="{{ unit.style }}" title="{{ unit.title }}" onClick="{{ unit.onClick }}" style-hover="transform:translateY(-1px); filter:brightness(.98);">
+              <span style="{{ unit.markerStyle }}"></span>{{ unit.label }}
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- ===== Arrivals & departures ===== -->
+      <div style="grid-column:var(--half-col,span 6); background:#fff; border:1px solid #E8E1D6; border-radius:14px; padding:var(--pad,20px); box-shadow:0 1px 2px rgba(31,40,50,.04);">
+        <div style="font-family:'Spectral',serif; font-size:17px; font-weight:600; color:#1d2932;">Today's arrivals &amp; departures</div>
+        <div style="margin-top:14px; display:flex; flex-direction:column; gap:3px;">
+          <sc-for list="{{ moves }}" as="a" hint-placeholder-count="5">
+            <div style="display:flex; align-items:center; gap:12px; padding:10px 8px; border-radius:9px;" style-hover="background:#faf7f1;">
+              <span style="{{ a.kindStyle }}">{{ a.kindLabel }}</span>
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:13.5px; font-weight:600; color:#28333c; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ a.name }}</div>
+                <div style="font-size:12px; color:#9a9384; display:flex; align-items:center; gap:5px;"><span style="{{ a.unitMarker }}"></span>{{ a.unit }} · {{ a.time }}</div>
+              </div>
+              <span style="{{ a.payStyle }}">{{ a.pay }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- ===== Staff activity feed ===== -->
+      <div style="grid-column:var(--half-col,span 6); background:#fff; border:1px solid #E8E1D6; border-radius:14px; padding:var(--pad,20px); box-shadow:0 1px 2px rgba(31,40,50,.04);">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <div style="font-family:'Spectral',serif; font-size:17px; font-weight:600; color:#1d2932;">Staff activity feed</div>
+          <span style="font-size:11.5px; color:#9a9384;">Voids · discounts · refunds flagged</span>
+        </div>
+        <div style="margin-top:14px; display:flex; flex-direction:column;">
+          <sc-for list="{{ feed }}" as="f" hint-placeholder-count="5">
+            <div style="{{ f.rowStyle }}">
+              <span style="font-size:11.5px; font-weight:600; color:#9a9384; font-variant-numeric:tabular-nums; width:42px; flex:none;">{{ f.time }}</span>
+              <span style="{{ f.dotStyle }}"></span>
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:13px; color:#3a4750; line-height:1.4;"><span style="{{ f.warnIcon }}">{{ f.warnGlyph }}</span>{{ f.text }}</div>
+                <sc-if value="{{ f.who }}" hint-placeholder-val="{{ true }}"><div style="font-size:11.5px; color:#9a9384; margin-top:1px;">{{ f.who }}</div></sc-if>
+              </div>
+              <sc-if value="{{ f.premium }}" hint-placeholder-val="{{ false }}">
+                <span style="font-size:9px; font-weight:700; letter-spacing:.5px; padding:2px 6px; border-radius:999px; background:color-mix(in srgb, var(--gold,#C9A24B) 20%, #fff); color:color-mix(in srgb, var(--gold,#C9A24B) 72%, #2a2008); flex:none;">PREMIUM</span>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- ===== Payments breakdown (Premium) ===== -->
+      <sc-if value="{{ showPremium }}" hint-placeholder-val="{{ true }}">
+      <div style="grid-column:var(--third-col,span 4); background:#fff; border:1px solid #E8E1D6; border-radius:14px; padding:var(--pad,20px); box-shadow:0 1px 2px rgba(31,40,50,.04);">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <div style="font-family:'Spectral',serif; font-size:17px; font-weight:600; color:#1d2932;">Payments breakdown</div>
+          <span style="font-size:9px; font-weight:700; letter-spacing:.6px; padding:3px 8px; border-radius:999px; background:color-mix(in srgb, var(--gold,#C9A24B) 20%, #fff); color:color-mix(in srgb, var(--gold,#C9A24B) 72%, #2a2008); border:1px solid color-mix(in srgb, var(--gold,#C9A24B) 45%, #fff);">PREMIUM</span>
+        </div>
+        <div style="display:flex; gap:3px; height:15px; margin-top:16px; border-radius:999px; overflow:hidden;">
+          <sc-for list="{{ payments }}" as="p" hint-placeholder-count="3">
+            <div style="{{ p.barStyle }}"></div>
+          </sc-for>
+        </div>
+        <div style="margin-top:14px;">
+          <sc-for list="{{ payments }}" as="p" hint-placeholder-count="3">
+            <div style="display:flex; align-items:center; gap:9px; margin-top:10px;">
+              <span style="{{ p.dotStyle }}"></span>
+              <span style="flex:1; font-size:13px; color:#3a4750;">{{ p.label }}</span>
+              <span style="font-size:12px; color:#9a9384; width:34px; text-align:right; font-variant-numeric:tabular-nums;">{{ p.pct }}</span>
+              <span style="font-size:12.5px; font-weight:600; color:#1d2932; width:88px; text-align:right; font-variant-numeric:tabular-nums;">{{ p.amount }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== Automated messaging (Premium) ===== -->
+      <sc-if value="{{ showPremium }}" hint-placeholder-val="{{ true }}">
+      <div style="grid-column:var(--third-col,span 4); background:#fff; border:1px solid #E8E1D6; border-radius:14px; padding:var(--pad,20px); box-shadow:0 1px 2px rgba(31,40,50,.04);">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <div style="font-family:'Spectral',serif; font-size:17px; font-weight:600; color:#1d2932;">Automated messaging</div>
+          <span style="font-size:9px; font-weight:700; letter-spacing:.6px; padding:3px 8px; border-radius:999px; background:color-mix(in srgb, var(--gold,#C9A24B) 20%, #fff); color:color-mix(in srgb, var(--gold,#C9A24B) 72%, #2a2008); border:1px solid color-mix(in srgb, var(--gold,#C9A24B) 45%, #fff);">PREMIUM</span>
+        </div>
+        <div style="margin-top:14px; display:flex; flex-direction:column; gap:11px;">
+          <sc-for list="{{ messaging }}" as="msg" hint-placeholder-count="3">
+            <div style="display:flex; align-items:center; gap:12px; padding:11px 13px; background:#FAF7F1; border-radius:10px;">
+              <div style="width:38px; height:38px; border-radius:9px; flex:none; background:#fff; border:1px solid #ECE4D6; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:var(--navy,#1F4E79); font-variant-numeric:tabular-nums;">{{ msg.count }}</div>
+              <div>
+                <div style="font-size:13.5px; font-weight:600; color:#28333c;">{{ msg.label }}</div>
+                <div style="font-size:12px; color:#9a9384;">{{ msg.sub }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== Advanced analytics (Premium) ===== -->
+      <sc-if value="{{ showPremium }}" hint-placeholder-val="{{ true }}">
+      <div style="grid-column:var(--third-col,span 4); background:#fff; border:1px solid #E8E1D6; border-radius:14px; padding:var(--pad,20px); box-shadow:0 1px 2px rgba(31,40,50,.04);">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <div style="font-family:'Spectral',serif; font-size:17px; font-weight:600; color:#1d2932;">Advanced analytics</div>
+          <span style="font-size:9px; font-weight:700; letter-spacing:.6px; padding:3px 8px; border-radius:999px; background:color-mix(in srgb, var(--gold,#C9A24B) 20%, #fff); color:color-mix(in srgb, var(--gold,#C9A24B) 72%, #2a2008); border:1px solid color-mix(in srgb, var(--gold,#C9A24B) 45%, #fff);">PREMIUM</span>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;">
+          <sc-for list="{{ analytics }}" as="an" hint-placeholder-count="4">
+            <div style="background:#FAF7F1; border-radius:10px; padding:12px 13px;">
+              <div style="font-size:11px; color:#9a9384; letter-spacing:.4px;">{{ an.label }}</div>
+              <div style="{{ an.valueStyle }}">{{ an.value }}</div>
+              <div style="font-size:11px; color:#9a9384; margin-top:2px;">{{ an.sub }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===== Alerts ===== -->
+      <div style="grid-column:span 12; background:#fff; border:1px solid #E8E1D6; border-radius:14px; padding:var(--pad,20px); box-shadow:0 1px 2px rgba(31,40,50,.04);">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="font-family:'Spectral',serif; font-size:17px; font-weight:600; color:#1d2932;">Alerts</div>
+          <span style="font-size:11px; font-weight:700; color:#fff; background:#C24B3E; padding:2px 8px; border-radius:999px;">{{ alertCount }}</span>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:12px; margin-top:14px;">
+          <sc-for list="{{ alerts }}" as="al" hint-placeholder-count="4">
+            <div style="{{ al.cardStyle }}">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                <span style="{{ al.sevStyle }}">{{ al.sevLabel }}</span>
+                <sc-if value="{{ al.premium }}" hint-placeholder-val="{{ false }}"><span style="font-size:9px; font-weight:700; letter-spacing:.5px; padding:2px 6px; border-radius:999px; background:color-mix(in srgb, var(--gold,#C9A24B) 20%, #fff); color:color-mix(in srgb, var(--gold,#C9A24B) 72%, #2a2008);">PREMIUM</span></sc-if>
+              </div>
+              <div style="font-size:14px; font-weight:600; color:#28333c; margin-top:9px;">{{ al.title }}</div>
+              <div style="font-size:12.5px; color:#857d6e; margin-top:3px;">{{ al.note }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ===================== UNIT POPOVER ===================== -->
+  <sc-if value="{{ selected }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed; inset:0; background:rgba(20,28,36,.44); display:flex; align-items:center; justify-content:center; z-index:60; padding:20px;" onClick="{{ closeUnit }}">
+      <div style="background:#fff; border-radius:18px; padding:26px; width:360px; max-width:100%; box-shadow:0 24px 70px rgba(0,0,0,.3);" onClick="{{ stop }}">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <span style="{{ selBadgeStyle }}">{{ selStatusLabel }}</span>
+          <button style="width:30px; height:30px; border-radius:8px; border:1px solid #E8E1D6; background:#fff; cursor:pointer; font-size:16px; color:#857d6e; line-height:1;" onClick="{{ closeUnit }}">×</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:13px; margin-top:18px;">
+          <div style="{{ selIconStyle }}">{{ selLabel }}</div>
+          <div>
+            <div style="font-family:'Spectral',serif; font-size:21px; font-weight:600; color:#1d2932;">{{ selFullLabel }}</div>
+            <div style="font-size:12.5px; color:#9a9384;">{{ selTypeLabel }}</div>
+          </div>
+        </div>
+        <div style="margin-top:18px; padding:14px 16px; background:#FAF7F1; border-radius:11px; font-size:13.5px; color:#3a4750; line-height:1.5;">{{ selLine }}</div>
+        <button style="{{ selActionStyle }}">{{ selAction }}</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===================== MOBILE BOTTOM NAV ===================== -->
+  <nav style="display:var(--bottomnav-disp,none); position:fixed; left:0; right:0; bottom:0; z-index:70; background:#fff; border-top:1px solid #E4DCCD; padding:6px 4px calc(6px + env(safe-area-inset-bottom)); box-shadow:0 -4px 18px rgba(31,40,50,.07); align-items:stretch;">
+    <button style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; border:none; background:none; cursor:pointer; color:var(--navy,#1F4E79);">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.4"></rect><rect x="14" y="3" width="7" height="5" rx="1.4"></rect><rect x="14" y="12" width="7" height="9" rx="1.4"></rect><rect x="3" y="16" width="7" height="5" rx="1.4"></rect></svg>
+      <span style="font-size:10.5px; font-weight:600;">Dashboard</span>
+    </button>
+    <button onClick="{{ openNav }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; border:none; background:none; cursor:pointer; color:#8b8474;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2.2"></rect><path d="M3 9h18M8 2v4M16 2v4"></path></svg>
+      <span style="font-size:10.5px; font-weight:500;">Bookings</span>
+    </button>
+    <button onClick="{{ openNav }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; border:none; background:none; cursor:pointer; color:#8b8474;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5M3 18v2M21 18v2M3 13V7a2 2 0 0 1 2-2h5v6"></path></svg>
+      <span style="font-size:10.5px; font-weight:500;">Units</span>
+    </button>
+    <button onClick="{{ openNav }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; border:none; background:none; cursor:pointer; color:#8b8474;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2.2"></rect><path d="M2.5 10h19"></path></svg>
+      <span style="font-size:10.5px; font-weight:500;">Payments</span>
+    </button>
+    <button onClick="{{ openNav }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; border:none; background:none; cursor:pointer; color:#8b8474;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+      <span style="font-size:10.5px; font-weight:500;">More</span>
+    </button>
+  </nav>
+
+  <!-- ===================== MOBILE NAV DRAWER ===================== -->
+  <sc-if value="{{ navOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeNav }}" style="position:fixed; inset:0; background:rgba(20,28,36,.5); z-index:80; display:flex;">
+      <aside onClick="{{ stop }}" style="width:272px; max-width:84%; height:100%; background:linear-gradient(180deg, var(--navy,#1F4E79) 0%, color-mix(in srgb, var(--navy,#1F4E79) 80%, #0a1c2e) 100%); color:#eef3f8; display:flex; flex-direction:column; animation:bamusdrawer .22s ease;">
+        <div style="padding:22px 22px 20px; border-bottom:1px solid rgba(255,255,255,.10); display:flex; align-items:center; justify-content:space-between;">
+          <div style="display:flex; align-items:center; gap:11px;">
+            <div style="width:38px; height:38px; border-radius:10px; background:color-mix(in srgb, var(--gold,#C9A24B) 90%, #fff); display:flex; align-items:center; justify-content:center; font-family:'Spectral',serif; font-weight:600; font-size:21px; color:#2a2008;">B</div>
+            <div>
+              <div style="font-family:'Spectral',serif; font-size:19px; font-weight:600; line-height:1;">Bamus</div>
+              <div style="font-size:10px; letter-spacing:1.3px; text-transform:uppercase; color:rgba(238,243,248,.62); margin-top:3px;">Suites &amp; Apartments</div>
+            </div>
+          </div>
+          <button onClick="{{ closeNav }}" aria-label="Close menu" style="width:32px; height:32px; border-radius:8px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.06); color:#fff; font-size:18px; cursor:pointer; line-height:1;">×</button>
+        </div>
+        <nav style="flex:1; padding:14px; display:flex; flex-direction:column; gap:2px; overflow-y:auto;">
+          <div onClick="{{ closeNav }}" style="position:relative; display:flex; align-items:center; gap:11px; padding:12px 13px; border-radius:9px; font-size:14.5px; font-weight:600; color:#fff; background:rgba(255,255,255,.10); cursor:pointer;">
+            <span style="position:absolute; left:0; top:9px; bottom:9px; width:3px; border-radius:0 3px 3px 0; background:var(--gold,#C9A24B);"></span>
+            <span style="width:7px; height:7px; border-radius:2px; background:var(--gold,#C9A24B);"></span>Dashboard
+          </div>
+          <sc-for list="{{ nav }}" as="n" hint-placeholder-count="9">
+            <div onClick="{{ closeNav }}" style="display:flex; align-items:center; gap:11px; padding:12px 13px; border-radius:9px; font-size:14.5px; font-weight:500; color:rgba(238,243,248,.78); cursor:pointer;">
+              <span style="width:7px; height:7px; border-radius:2px; background:rgba(238,243,248,.30);"></span>{{ n.label }}
+            </div>
+          </sc-for>
+        </nav>
+        <div style="padding:14px 18px; border-top:1px solid rgba(255,255,255,.10); display:flex; align-items:center; gap:11px;">
+          <div style="width:38px; height:38px; border-radius:50%; flex:none; background:color-mix(in srgb, var(--gold,#C9A24B) 30%, var(--navy,#1F4E79)); border:2px solid var(--gold,#C9A24B); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff;">MG</div>
+          <div style="min-width:0;">
+            <div style="font-size:13.5px; font-weight:600; color:#fff;">Mustapha Garba</div>
+            <div style="font-size:11px; color:rgba(238,243,248,.60);">Owner · General Manager</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:980},&quot;brandNavy&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#1F4E79&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#1F4E79&quot;,&quot;#173a5e&quot;,&quot;#234E52&quot;,&quot;#3A3A5C&quot;,&quot;#4A3A2A&quot;]},&quot;goldAccent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#C9A24B&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#C9A24B&quot;,&quot;#B8893C&quot;,&quot;#A88A2E&quot;,&quot;#C08A2E&quot;,&quot;#9C7B3A&quot;]},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;comfortable&quot;,&quot;options&quot;:[&quot;comfortable&quot;,&quot;compact&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;showPremium&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { range:'today', now:new Date('2026-06-25T09:14:03'), filterType:'all', filterStatus:'all', selected:null, hoverBar:-1, navOpen:false };
+
+  componentDidMount(){
+    this._t = setInterval(() => this.setState(s => ({ now: new Date(s.now.getTime() + 1000) })), 1000);
+  }
+  componentWillUnmount(){ clearInterval(this._t); }
+
+  naira(n){ return '₦' + Number(n).toLocaleString('en-US'); }
+
+  STAT(){
+    return {
+      occupied:{ label:'Occupied',      bg:'#E8F0F8', fg:'#295E94', bd:'#CFE0F0', dot:'#2E6CA8' },
+      clean:   { label:'Vacant · clean', bg:'#E7F3EC', fg:'#2E7D4F', bd:'#CDE8D8', dot:'#3E9D6E' },
+      toclean: { label:'To clean',       bg:'#FBF1DC', fg:'#9A7320', bd:'#F0E0B8', dot:'#D29A3A' },
+      maint:   { label:'Maintenance',    bg:'#F9E7E4', fg:'#B23A2C', bd:'#F1D2CC', dot:'#C24B3E' }
+    };
+  }
+
+  buildUnits(){
+    if(this._units) return this._units;
+    const names=['David Okonkwo','Aisha Lawal','Grace Eze','Tunde Bello','Chidi Nwosu','Fatima Bello','Emeka Obi','Ngozi Ali','Yusuf Sani','Blessing Udo','Kunle Ade','Zainab Idris','Peter Eze','Hauwa Musa','Samuel Oji','Ada Nri','Bola Akin','Ibrahim Sule','Joy Mark','Tobi Cole','Rita Ben','Musa Bala','Ife Olu','Nneka Eze','Sade Akin','Uche Eke','Lola Daniels','Femi Ojo','Halima Yusuf','Chioma Eze','Dele Soyinka','Amaka Obi','Gbenga Ade','Funke Ola'];
+    const nights=[3,1,5,2,4,2,1,6,3,2,4,1,3,2,5,1,2,3,4,1,2,3,1,5,2,3,1,4,2,3,1,2,4,3];
+    const roomNos=[]; for(let i=101;i<=112;i++) roomNos.push(i); for(let i=201;i<=212;i++) roomNos.push(i); for(let i=301;i<=306;i++) roomNos.push(i);
+    const apts=[]; for(let i=1;i<=14;i++) apts.push('A'+i);
+    const clean=new Set(['103','110','208','303','A4','A11']);
+    const toclean=new Set(['106','211','A9']);
+    const maint=new Set(['306']);
+    let gi=0; const units=[];
+    const push=(label,type)=>{
+      let status='occupied';
+      if(maint.has(label)) status='maint';
+      else if(clean.has(label)) status='clean';
+      else if(toclean.has(label)) status='toclean';
+      let guest=null, nightsN=0;
+      if(status==='occupied'){ guest=names[gi % names.length]; nightsN=nights[gi % nights.length]; gi++; }
+      units.push({ label, type, status, guest, nights:nightsN });
+    };
+    roomNos.forEach(n=>push(String(n),'room'));
+    apts.forEach(a=>push(a,'apt'));
+    this._units=units; return units;
+  }
+
+  buildTrend30(){
+    if(this._t30) return this._t30;
+    let s=42; const r=()=>{ s=(s*1103515245+12345)&0x7fffffff; return s/0x7fffffff; };
+    const a=[]; for(let i=0;i<30;i++){ const base=920+i*7; a.push(Math.max(740, Math.round(base+(r()-0.42)*250))); }
+    a[29]=Math.round(a[28]*0.6);
+    this._t30=a; return a;
+  }
+
+  renderVals(){
+    const navy = this.props.brandNavy || '#1F4E79';
+    const gold = this.props.goldAccent || '#C9A24B';
+    const density = this.props.density || 'comfortable';
+    const showPremium = this.props.showPremium !== false;
+    const pad = density==='compact' ? '15px' : '20px';
+    const gap = density==='compact' ? '13px' : '18px';
+    const range = this.state.range;
+    const STAT = this.STAT();
+
+    // ---- KPIs ----
+    const kpis = {
+      today:{ revenue:'₦1,240,000', revDelta:'+12%', occupancy:'78%', occSub:'34 of 44 units', roomsPct:80, roomsN:'24/30', aptsPct:71, aptsN:'10/14', arr:'9', dep:'6', fnb:'₦318,500', fnbDelta:'+5%', outstanding:'₦96,000', outSub:'across 3 folios', online:'₦642,000' },
+      week:{ revenue:'₦8,150,000', revDelta:'+9%', occupancy:'74%', occSub:'avg 33 of 44 units', roomsPct:76, roomsN:'~23/30', aptsPct:68, aptsN:'~10/14', arr:'58', dep:'61', fnb:'₦1,980,000', fnbDelta:'+7%', outstanding:'₦96,000', outSub:'across 3 folios', online:'₦4,120,000' },
+      month:{ revenue:'₦33,400,000', revDelta:'+18%', occupancy:'71%', occSub:'avg 31 of 44 units', roomsPct:73, roomsN:'~22/30', aptsPct:66, aptsN:'~9/14', arr:'246', dep:'239', fnb:'₦8,240,000', fnbDelta:'+6%', outstanding:'₦96,000', outSub:'across 3 folios', online:'₦17,600,000' }
+    };
+    const kb = kpis[range];
+    const k = Object.assign({}, kb, { roomsW: kb.roomsPct+'%', aptsW: kb.aptsPct+'%' });
+    const revLabel = range==='today' ? "Today's revenue" : range==='week' ? "This week's revenue" : "This month's revenue";
+    const deltaNote = range==='today' ? 'vs yesterday' : range==='week' ? 'vs last week' : 'vs last month';
+
+    // ---- range pills ----
+    const pills = [['today','Today'],['week','This week'],['month','This month']].map(([key,label])=>({
+      key, label,
+      style: range===key
+        ? `padding:7px 14px; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; background:${navy}; color:#fff;`
+        : `padding:7px 14px; border:none; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; font-family:inherit; background:transparent; color:#6b7280;`,
+      onClick: ()=> this.setState({ range:key })
+    }));
+
+    // ---- revenue vs expenses (area chart) ----
+    const vals = range==='month' ? this.buildTrend30() : [980,1120,1040,1260,1180,1340,1240];
+    const labs = range==='month' ? null : ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    let es = 7; const er = ()=>{ es=(es*1103515245+12345)&0x7fffffff; return es/0x7fffffff; };
+    const series = vals.map(v=>{
+      const ratio = 0.58 + er()*0.10;
+      const exp = Math.round(v*ratio);
+      return { rev:v, exp, profit:v-exp };
+    });
+    const maxV = Math.max.apply(null, vals);
+    let totRev=0, totExp=0;
+    series.forEach(s=>{ totRev+=s.rev; totExp+=s.exp; });
+    const totProfit = totRev-totExp;
+    const sumRevenue = this.naira(totRev*1000);
+    const sumExpenses = this.naira(totExp*1000);
+    const sumProfit = this.naira(totProfit*1000);
+    const profitMargin = Math.round(totProfit/totRev*100) + '%';
+
+    // ---- grouped bar chart: revenue vs expenses ----
+    const hi = this.state.hoverBar;
+    const n = series.length;
+    const hov = hi>=0 && hi<n;
+    const barW = n<=7 ? 13 : n<=14 ? 8 : 5;
+    const expColor = '#C0795A';
+    const bars = series.map((s,i)=>{
+      const revH = Math.max(2, Math.round(s.rev/maxV*100));
+      const expH = Math.max(2, Math.round(s.exp/maxV*100));
+      const dim = (hov && i!==hi) ? '0.4' : '1';
+      const base = `width:${barW}px; border-radius:4px 4px 0 0; transition:opacity .12s; opacity:${dim};`;
+      const lbl = labs ? labs[i] : ('Day ' + (i+1));
+      return {
+        label: labs ? labs[i] : (i%5===0 ? String(i+1) : ''),
+        revStyle: `${base} height:${revH}%; background:${navy};`,
+        expStyle: `${base} height:${expH}%; background:${expColor};`,
+        title: `${lbl} · Revenue ${this.naira(s.rev*1000)} · Expenses ${this.naira(s.exp*1000)}`,
+        onEnter: ()=> this.setState({ hoverBar:i }),
+        onLeave: ()=> this.setState({ hoverBar:-1 })
+      };
+    });
+    const groupGap = n<=7 ? '14px' : n<=14 ? '6px' : '2px';
+
+    // hover tooltip above the focused group
+    let areaTipStyle='display:none;', hoverLabel='', hoverRev='', hoverExp='', hoverProfit='';
+    if(hov){
+      const lx = ((hi+0.5)/n)*100;
+      const flip = lx>62;
+      hoverLabel = labs ? labs[hi] : ('Day ' + (hi+1));
+      hoverRev = this.naira(series[hi].rev*1000);
+      hoverExp = this.naira(series[hi].exp*1000);
+      hoverProfit = this.naira(series[hi].profit*1000);
+      areaTipStyle = `position:absolute; left:${lx}%; top:6px; ${flip?'transform:translateX(calc(-100% - 10px));':'transform:translateX(10px);'} background:#1d2932; color:#fff; font-size:11px; padding:8px 11px; border-radius:9px; min-width:150px; box-shadow:0 8px 24px rgba(0,0,0,.22); pointer-events:none; z-index:9;`;
+    }
+
+    const trendLabel = range==='month' ? 'last 30 days' : 'last 7 days';
+
+    // ---- expense breakdown (fake categories, scaled to total expenses) ----
+    const expCatDef = [
+      ['Payroll & staff', 38, '#1F4E79'],
+      ['Food & beverage', 22, '#3E7CA8'],
+      ['Utilities & diesel', 16, '#C9A24B'],
+      ['Maintenance', 9, '#C0795A'],
+      ['Marketing & OTA', 8, '#7C9A6E'],
+      ['Admin & other', 7, '#9A8FA8']
+    ];
+    const expenseCats = expCatDef.map(([label,pct,color])=>({
+      label, pct: pct+'%', color,
+      amount: this.naira(Math.round(totExp*1000*pct/100)),
+      title: `${label} · ${pct}%`,
+      barStyle: `width:${pct}%; background:${color};`,
+      dotStyle: `width:10px; height:10px; border-radius:3px; flex:none; background:${color};`
+    }));
+
+    // ---- revenue mix ----
+    const revNum = { today:1240000, week:8150000, month:33400000 }[range];
+    const mixDef = [['Rooms',48,navy],['Apartments',14,'#6FA0C8'],['Restaurant',26,gold],['Bar',12,'#E0B86A']];
+    let acc=0; const segs=[];
+    const mix = mixDef.map(([label,pct,color])=>{
+      const start=acc, end=acc+pct; acc=end;
+      segs.push(`${color} ${start*3.6}deg ${end*3.6}deg`);
+      return { label, pct:pct+'%', amount:this.naira(Math.round(revNum*pct/100)), color, dotStyle:`width:10px; height:10px; border-radius:3px; flex:none; background:${color};` };
+    });
+    const mixGradient = `conic-gradient(${segs.join(',')})`;
+    const mixTotal = this.naira(revNum);
+
+    // ---- payments (premium) ----
+    const payRaw = { today:[642000,455000,96000], week:[4120000,3030000,96000], month:[17600000,12800000,96000] }[range];
+    const payDef = [['Paid online','#3E9D6E'],['Pay on arrival',navy],['Unpaid','#C24B3E']];
+    const payTotal = payRaw.reduce((a,b)=>a+b,0);
+    const payments = payDef.map(([label,color],i)=>{
+      const pct = Math.round(payRaw[i]/payTotal*100);
+      return { label, amount:this.naira(payRaw[i]), pct:pct+'%', color,
+        barStyle:`width:${payRaw[i]/payTotal*100}%; background:${color};`,
+        dotStyle:`width:10px; height:10px; border-radius:3px; flex:none; background:${color};` };
+    });
+
+    // ---- units ----
+    const allUnits = this.buildUnits();
+    const counts = { all:allUnits.length, occupied:0, clean:0, toclean:0, maint:0 };
+    allUnits.forEach(u=>counts[u.status]++);
+    const ft = this.state.filterType, fs = this.state.filterStatus;
+    const units = allUnits.filter(u => (ft==='all'||u.type===ft) && (fs==='all'||u.status===fs)).map(u=>{
+      const m = STAT[u.status];
+      return {
+        label:u.label, type:u.type, status:u.status,
+        title:`${u.type==='apt'?'Apartment':'Room'} ${u.label} · ${m.label}`,
+        style:`position:relative; display:flex; align-items:center; justify-content:center; height:46px; border-radius:9px; font-size:13.5px; font-weight:600; cursor:pointer; background:${m.bg}; color:${m.fg}; border:1px solid ${m.bd}; font-variant-numeric:tabular-nums; transition:transform .12s, filter .12s;`,
+        markerStyle:`position:absolute; top:5px; right:6px; width:6px; height:6px; border-radius:${u.type==='apt'?'50%':'2px'}; background:${u.type==='apt'?gold:navy};`,
+        onClick: ()=> this.setState({ selected:u })
+      };
+    });
+
+    const legend = [['occupied','Occupied'],['clean','Clean'],['toclean','To clean'],['maint','Maintenance']].map(([key,label])=>({
+      label, count:counts[key], dotStyle:`width:9px; height:9px; border-radius:3px; background:${STAT[key].dot};`
+    }));
+
+    const typeFilters = [['all','All'],['room','Rooms'],['apt','Apartments']].map(([key,label])=>({
+      label,
+      style: ft===key
+        ? `padding:6px 13px; border:none; border-radius:7px; font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit; background:#fff; color:${navy}; box-shadow:0 1px 2px rgba(0,0,0,.06);`
+        : `padding:6px 13px; border:none; border-radius:7px; font-size:12.5px; font-weight:500; cursor:pointer; font-family:inherit; background:transparent; color:#857d6e;`,
+      onClick: ()=> this.setState({ filterType:key })
+    }));
+
+    const statusFilters = [['all','All'],['occupied','Occupied'],['clean','Clean'],['toclean','To clean'],['maint','Maintenance']].map(([key,label])=>{
+      const active = fs===key;
+      const m = key==='all' ? {fg:navy,bd:navy,bg:navy} : STAT[key];
+      return {
+        label, count: key==='all'?counts.all:counts[key],
+        style: active
+          ? `padding:6px 11px; border:1px solid ${m.fg}; border-radius:8px; font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit; background:${key==='all'?navy:m.bg}; color:${key==='all'?'#fff':m.fg};`
+          : `padding:6px 11px; border:1px solid #E6DECF; border-radius:8px; font-size:12.5px; font-weight:500; cursor:pointer; font-family:inherit; background:#fff; color:#5b6670;`,
+        onClick: ()=> this.setState({ filterStatus:key })
+      };
+    });
+
+    // ---- arrivals / departures ----
+    const moveDef = [
+      { kind:'in', name:'David Okonkwo', unit:'Room 204', type:'room', time:'14:00', pay:'Paid online', payState:'paid' },
+      { kind:'in', name:'Aisha Lawal', unit:'Apartment A6', type:'apt', time:'15:30', pay:'Pay on arrival', payState:'pending' },
+      { kind:'in', name:'Grace Eze', unit:'Room 118', type:'room', time:'16:00', pay:'Paid online', payState:'paid' },
+      { kind:'out', name:'Tunde Bello', unit:'Room 207', type:'room', time:'11:00', pay:'Settled', payState:'paid' },
+      { kind:'out', name:'Mary John', unit:'Apartment A3', type:'apt', time:'12:00', pay:'Unpaid ₦42,000', payState:'unpaid' }
+    ];
+    const payTag = { paid:['#E7F3EC','#2E7D4F'], pending:['#E8F0F8','#295E94'], unpaid:['#F9E7E4','#B23A2C'] };
+    const moves = moveDef.map(m=>{
+      const pt = payTag[m.payState];
+      return {
+        name:m.name, unit:m.unit, time:m.time, pay: showPremium ? m.pay : (m.kind==='in'?'Arrival':'Departure'),
+        kindLabel: m.kind==='in' ? 'IN' : 'OUT',
+        kindStyle: `flex:none; width:38px; text-align:center; font-size:10.5px; font-weight:700; letter-spacing:.5px; padding:5px 0; border-radius:7px; background:${m.kind==='in'?'#E7F3EC':'#FBF1DC'}; color:${m.kind==='in'?'#2E7D4F':'#9A7320'};`,
+        unitMarker: `width:6px; height:6px; border-radius:${m.type==='apt'?'50%':'2px'}; background:${m.type==='apt'?gold:navy}; display:inline-block;`,
+        payStyle: `flex:none; font-size:11.5px; font-weight:600; padding:4px 9px; border-radius:999px; background:${showPremium?pt[0]:'#F4F0E8'}; color:${showPremium?pt[1]:'#857d6e'};`
+      };
+    });
+
+    // ---- staff feed ----
+    const feedDef = [
+      { time:'09:14', text:'Front desk checked in Room 204', who:'A. Bello' },
+      { time:'09:02', text:'Bar order ₦6,500 posted to Apartment A3', who:'' },
+      { time:'08:51', text:'Manager voided ₦4,500 bar charge', who:'J. Musa', warn:true },
+      { time:'08:30', text:'Discount 10% applied to Folio #1182', who:'O. Eze', warn:true },
+      { time:'08:05', text:'Online payment ₦85,000 received — Apartment A6', who:'', premium:true }
+    ];
+    const feed = feedDef.filter(f=> !(f.premium && !showPremium)).map(f=>({
+      time:f.time, text:f.text, who:f.who, premium: !!f.premium && showPremium,
+      rowStyle:`display:flex; align-items:flex-start; gap:10px; padding:10px 9px; border-radius:9px; ${f.warn?'background:#FBF1DC; border:1px solid #F0E0B8;':''} margin-bottom:4px;`,
+      dotStyle:`width:7px; height:7px; border-radius:50%; flex:none; margin-top:6px; background:${f.warn?'#D29A3A':(f.premium?gold:'#C7BEAE')};`,
+      warnGlyph: f.warn ? '⚠ ' : '',
+      warnIcon: f.warn ? 'color:#9A7320; font-weight:700;' : 'display:none;'
+    }));
+
+    // ---- messaging (premium) ----
+    const messaging = [
+      { count:'12', label:'Booking confirmation email', sub:'sent today' },
+      { count:'7', label:'Check-in reminder SMS', sub:'sent today' },
+      { count:'9', label:'Payment receipt email', sub:'sent today' }
+    ];
+
+    // ---- analytics (premium) ----
+    const analytics = [
+      { label:'ADR', value:'₦41,200', sub:'avg daily rate', up:false },
+      { label:'RevPAR', value:'₦32,100', sub:'per available unit', up:false },
+      { label:'Month vs last', value:'+18%', sub:'revenue growth', up:true },
+      { label:'Top F&B item', value:'Jollof & Chicken', sub:'142 sold', up:false, small:true }
+    ].map(a=>({
+      label:a.label, value:a.value, sub:a.sub,
+      valueStyle:`font-size:${a.small?'15px':'19px'}; font-weight:700; color:${a.up?'#2E7D4F':'#1d2932'}; margin-top:6px; font-variant-numeric:tabular-nums; letter-spacing:-.3px; line-height:1.15;`
+    }));
+
+    // ---- alerts ----
+    const alertDef = [
+      { sev:'high', title:'Room 306 — AC fault logged', note:'Awaiting maintenance assignment' },
+      { sev:'medium', title:'3 unpaid folios', note:'₦96,000 outstanding' },
+      { sev:'medium', title:'2 units overdue for cleaning', note:'Past 12:00 — Room 106, Apartment A9' },
+      { sev:'high', title:'1 failed online payment', note:'Apartment A2 — needs follow-up', premium:true }
+    ];
+    const sevMeta = { high:{bg:'#F9E7E4',bd:'#F1D2CC',fg:'#B23A2C',label:'HIGH'}, medium:{bg:'#FBF1DC',bd:'#F0E0B8',fg:'#9A7320',label:'MEDIUM'} };
+    const alerts = alertDef.filter(a=> !(a.premium && !showPremium)).map(a=>{
+      const m = sevMeta[a.sev];
+      return { title:a.title, note:a.note, premium: !!a.premium && showPremium,
+        cardStyle:`background:${m.bg}; border:1px solid ${m.bd}; border-left:3px solid ${m.fg}; border-radius:11px; padding:14px 15px;`,
+        sevStyle:`font-size:10px; font-weight:700; letter-spacing:.6px; padding:2px 8px; border-radius:999px; background:#fff; color:${m.fg}; border:1px solid ${m.bd};`,
+        sevLabel:m.label };
+    });
+    const alertCount = alerts.length;
+
+    // ---- selected unit popover ----
+    const sel = this.state.selected;
+    let selFields = {};
+    if(sel){
+      const m = STAT[sel.status];
+      const typeLabel = sel.type==='apt' ? 'Serviced apartment' : 'Hotel room';
+      let line, action;
+      if(sel.status==='occupied'){ line = `Occupied by ${sel.guest} · ${sel.nights} night${sel.nights>1?'s':''} in residence. Folio open and in good standing.`; action='View folio'; }
+      else if(sel.status==='clean'){ line = 'Vacant and cleaned — ready for the next check-in.'; action='Assign to arrival'; }
+      else if(sel.status==='toclean'){ line = 'Vacant but awaiting housekeeping. Flagged in today\u2019s cleaning queue.'; action='Assign housekeeping'; }
+      else { line = 'Out of service — AC fault logged. Maintenance ticket open, awaiting assignment.'; action='View maintenance ticket'; }
+      selFields = {
+        selLabel: sel.label,
+        selFullLabel: (sel.type==='apt'?'Apartment ':'Room ') + sel.label,
+        selTypeLabel: typeLabel,
+        selStatusLabel: m.label,
+        selBadgeStyle:`font-size:11px; font-weight:700; letter-spacing:.5px; padding:5px 11px; border-radius:999px; background:${m.bg}; color:${m.fg}; border:1px solid ${m.bd};`,
+        selIconStyle:`width:54px; height:54px; flex:none; border-radius:13px; background:${m.bg}; color:${m.fg}; border:1px solid ${m.bd}; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:700; font-variant-numeric:tabular-nums;`,
+        selLine: line,
+        selAction: action,
+        selActionStyle:`margin-top:18px; width:100%; padding:12px; border:none; border-radius:11px; background:${navy}; color:#fff; font-size:13.5px; font-weight:600; font-family:inherit; cursor:pointer;`
+      };
+    }
+
+    // ---- nav ----
+    const nav = ['Reservations','Rooms & Apartments','Restaurant & Bar','Guests','Housekeeping','Staff','Payments','Reports','Settings'].map(label=>({ label }));
+
+    // ---- clock ----
+    const now = this.state.now;
+    const dateString = now.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    const timeString = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+
+    return Object.assign({
+      navy, gold, pad, gap, showPremium,
+      k, revLabel, deltaNote, pills,
+      bars, trendLabel,
+      areaTipStyle, groupGap,
+      hoverLabel, hoverRev, hoverExp, hoverProfit,
+      expenseCats,
+      sumRevenue, sumExpenses, sumProfit, profitMargin,
+      mix, mixGradient, mixTotal,
+      payments, units, legend, typeFilters, statusFilters,
+      moves, feed, messaging, analytics, alerts, alertCount,
+      nav, dateString, timeString,
+      selected: !!sel,
+      navOpen: this.state.navOpen,
+      openNav: ()=> this.setState({ navOpen:true }),
+      closeNav: ()=> this.setState({ navOpen:false }),
+      closeUnit: ()=> this.setState({ selected:null }),
+      stop: (e)=> e.stopPropagation()
+    }, selFields);
+  }
+}
+</script>
+</body>
+</html>
