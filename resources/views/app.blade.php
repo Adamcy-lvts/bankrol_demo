@@ -30,15 +30,26 @@
             }
         </style>
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <link rel="icon" href="/favicon.svg" sizes="any">
+        <link rel="apple-touch-icon" href="/favicon.svg">
+
+        {{-- Link / social share preview --}}
+        <meta property="og:type" content="website">
+        <meta property="og:site_name" content="Visual Demo">
+        <meta property="og:title" content="Visual Demo">
+        <meta property="og:description" content="Bankrol — executive command centre for construction, investment and energy.">
+        <meta property="og:image" content="{{ url('/img/bankrol_logo_2.png') }}">
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="Visual Demo">
+        <meta name="twitter:description" content="Bankrol — executive command centre for construction, investment and energy.">
+        <meta name="twitter:image" content="{{ url('/img/bankrol_logo_2.png') }}">
 
         @fonts
 
         @vite(['resources/css/app.css', 'resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])
         <x-inertia::head>
-            <title>{{ config('app.name', 'Laravel') }}</title>
+            <title>{{ config('app.name', 'Visual Demo') }}</title>
         </x-inertia::head>
     </head>
     <body class="font-sans antialiased">
