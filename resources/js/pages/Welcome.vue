@@ -9,6 +9,11 @@ const props = { showReferral: true, defaultPeriod: 'month' };
 
 // Default photographs (real estate / construction). Users can replace any of
 // these by clicking/dropping their own — see BnkImageSlot.
+// Brand logo: logo_1 is the light wordmark (for dark backgrounds), logo_2 the
+// dark wordmark (for light backgrounds / white document pages).
+const LOGO_LIGHT = '/img/bankrol_logo_2.png';
+const LOGO_DARK = '/img/bankrol_logo_1.png';
+
 const HERO_PHOTO = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=80&auto=format&fit=crop';
 const SITE_PHOTOS = [
     'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=80&auto=format&fit=crop',
@@ -33,6 +38,7 @@ function set(patch) { Object.assign(state, patch); }
 function go(screen) { set({ screen, drawerOpen: false }); window.scrollTo(0, 0); }
 function toggleTheme() { const theme = state.theme === 'dark' ? 'light' : 'dark'; set({ theme }); try { localStorage.setItem('bnk_theme', theme); } catch (e) { /* ignore */ } }
 function signIn() { set({ authed: true }); try { localStorage.setItem('bnk_authed', '1'); } catch (e) { /* ignore */ } }
+function signOut() { set({ authed: false, screen: 'dashboard', drawerOpen: false, docOpen: false, moreOpen: false }); try { localStorage.removeItem('bnk_authed'); } catch (e) { /* ignore */ } window.scrollTo(0, 0); }
 function openDoc(type) { set({ docOpen: true, docType: type }); }
 function closeDoc() { set({ docOpen: false }); }
 function printDoc() { window.print(); }
@@ -87,21 +93,22 @@ const v = computed(() => {
     const showReferral = props.showReferral !== false;
 
     // ---------- NAV ----------
-    const navDefs = [['dashboard', 'Dashboard', 'dashboard'], ['portfolio', 'Portfolio', 'apartment'], ['clients', 'Clients', 'group'], ['build', 'Build', 'construction'], ['finance', 'Finance', 'account_balance_wallet'], ['documents', 'Documents', 'description'], ['reports', 'Reports', 'monitoring']];
+    const navDefs = [['dashboard', 'Dashboard', 'grid_view'], ['portfolio', 'Portfolio', 'apartment'], ['clients', 'Clients', 'groups'], ['build', 'Build', 'architecture'], ['finance', 'Finance', 'account_balance'], ['documents', 'Documents', 'article'], ['reports', 'Reports', 'insights']];
     const navItems = navDefs.map(([id, label, icon]) => {
         const active = scr === id || (id === 'clients' && scr === 'client-profile') || (id === 'build' && scr === 'build-detail');
         return { label, icon, onClick: () => go(id), style: `display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:11px;border:none;cursor:pointer;text-align:left;width:100%;transition:all .2s ease;background:${active ? 'var(--golds)' : 'transparent'};color:${active ? 'var(--gold)' : 'var(--t2)'};font-weight:${active ? '700' : '600'};` };
     });
     const mobBtn = (active) => `display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 8px;min-width:52px;background:transparent;border:none;cursor:pointer;color:${active ? 'var(--gold)' : 'var(--t3)'};`;
-    const mobileDefs = [['dashboard', 'Home', 'dashboard'], ['portfolio', 'Portfolio', 'apartment'], ['clients', 'Clients', 'group'], ['build', 'Build', 'construction']];
+    const mobileDefs = [['dashboard', 'Home', 'grid_view'], ['portfolio', 'Portfolio', 'apartment'], ['clients', 'Clients', 'groups'], ['build', 'Build', 'architecture']];
     const mobileNav = mobileDefs.map(([id, label, icon]) => {
         const active = scr === id || (id === 'clients' && scr === 'client-profile') || (id === 'build' && scr === 'build-detail');
         return { label, icon, onClick: () => go(id), style: mobBtn(active) };
     });
     mobileNav.push({ label: 'More', icon: 'menu', onClick: () => set({ moreOpen: true }), style: mobBtn(['finance', 'documents', 'reports'].includes(scr)) });
     const moreRow = (active) => `display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:14px;border:none;border-radius:12px;cursor:pointer;margin-bottom:4px;background:${active ? 'var(--golds)' : 'transparent'};color:${active ? 'var(--gold)' : 'var(--text)'};`;
-    const moreItems = [['finance', 'Finance', 'account_balance_wallet'], ['documents', 'Documents', 'description'], ['reports', 'Reports', 'monitoring']].map(([id, label, icon]) => ({ label, icon, onClick: () => { go(id); set({ moreOpen: false }); }, style: moreRow(scr === id) }));
+    const moreItems = [['finance', 'Finance', 'account_balance'], ['documents', 'Documents', 'article'], ['reports', 'Reports', 'insights']].map(([id, label, icon]) => ({ label, icon, onClick: () => { go(id); set({ moreOpen: false }); }, style: moreRow(scr === id) }));
     moreItems.push({ label: theme === 'dark' ? 'Light mode' : 'Dark mode', icon: theme === 'dark' ? 'light_mode' : 'dark_mode', onClick: () => { toggleTheme(); set({ moreOpen: false }); }, style: moreRow(false) });
+    moreItems.push({ label: 'Sign out', icon: 'logout', onClick: () => { signOut(); }, style: moreRow(false) });
 
     const titleMap = { dashboard: ['Executive Dashboard', 'Develop → Build → Sell → Handover, in one view'], portfolio: ['Estate & Project Portfolio', 'Everything in progress across the business'], clients: ['Clients', 'Referral-driven private sales'], 'client-profile': ['Client Profile', 'Relationship & history'], build: ['Build', 'Live construction progress across active projects'], 'build-detail': ['Build Timeline', 'Live progress'], finance: ['Finance & Cash', 'Receivables, payables and payments'], documents: ['Document Center', 'Generate and manage paperwork'], reports: ['Reports', 'Performance across the business'] };
     const pt = titleMap[scr] || ['', ''];
@@ -295,6 +302,87 @@ const v = computed(() => {
         completion: [['Completion Date', '23 June 2026'], ['Certificate No', 'BNK/CC/0088'], ['Standard', 'FCDA Approved']].map(([k, val]) => ({ k, v: val })),
         isAgreement: dt === 'Sales Agreement', isOffer: dt === 'Offer Letter', isAllocation: dt === 'Allocation Letter', isInvoice: dt === 'Invoice', isReceipt: dt === 'Receipt', isCompletion: dt === 'Completion Certificate',
     };
+    // Payment Receipt template data (Bankrol demo context)
+    const rcpt = {
+        receiptNo: 'BNK/RC/0312',
+        txnId: 'PAY-9F2C-7K10',
+        amountPaid: '₦95,000,000',
+        paidFor: 'Toward ' + docCtx.name + ' — installment payment, Bankrol Heights, Abuja.',
+        payer: docClient,
+        payerLine: 'Bankrol Heights, Abuja · FCT, Nigeria',
+        datePaid: '23 June 2026 · 14:32',
+        payMethod: 'Bank transfer · Zenith ••4471',
+        invoiceTotal: '₦95,000,000',
+        balance: '₦0.00',
+        note: 'This document confirms the amount above has been received and applied to your purchase ledger. No further action is required for this installment. Please retain this receipt for your records.',
+        signature: 'A. Okafor',
+        signatureRole: 'Authorised Signatory · Finance',
+        footerLeft: 'Bankrol Limited · RC 1029384 · finance@bankrol.ng · +234 9 876 5432',
+        footerRight: 'Thank you',
+        items: [
+            { title: docCtx.name + ' — installment payment', amount: '₦92,700,000' },
+            { title: 'Infrastructure & service levy', amount: '₦1,500,000' },
+            { title: 'Documentation & title processing', amount: '₦800,000' },
+        ],
+    };
+    // Invoice template data (Bankrol demo context)
+    const inv = {
+        invoiceNo: doc.ref,
+        reference: 'PO-2026-0142',
+        clientName: docClient,
+        clientLine1: 'Bankrol Heights, Abuja',
+        clientLine2: 'FCT, Nigeria',
+        dateIssued: doc.date,
+        payMethod: 'Zenith Bank · 1023 4856 91',
+        taxLabel: 'VAT (7.5%)',
+        notes: 'Payment due within 14 days of the date issued. Kindly quote the reference above on all transfers. Account: Bankrol Limited · Zenith Bank · 1023 4856 91.',
+        signature: 'A. Okafor',
+        signatureRole: 'Authorised Signatory · Finance',
+        footerLeft: 'Bankrol Limited · RC 1029384 · finance@bankrol.ng · +234 9 876 5432',
+        footerRight: 'Thank you',
+        subtotal: '₦139,300,000',
+        tax: '₦10,447,500',
+        total: '₦149,747,500',
+        items: [
+            { title: docCtx.name, detail: '4-bed terrace · Bankrol Heights development', qty: '1', unit: '₦135,000,000', amount: '₦135,000,000' },
+            { title: 'Legal & documentation', detail: 'Deed of assignment · Governor’s consent', qty: '1', unit: '₦2,500,000', amount: '₦2,500,000' },
+            { title: 'Service charge (1 year)', detail: 'Estate management & security', qty: '1', unit: '₦1,800,000', amount: '₦1,800,000' },
+        ],
+    };
+    // Sale & Purchase Agreement template data (Bankrol demo context)
+    const agStatusFg = { Paid: '#5E7355', Due: '#B07C1E', Scheduled: '#9A958B' };
+    const agr = {
+        brand: 'BANKROL',
+        instrument: 'Deed of Sale · Private & Confidential',
+        agreementNo: 'BNK/SPA/0142',
+        agreementDate: doc.date,
+        totalPrice: '₦135,000,000',
+        totalWords: 'One hundred and thirty-five million naira only',
+        completionDate: '30 September 2026',
+        interestRate: '1.5%',
+        cureDays: '21 days',
+        forfeit: '10%',
+        jurisdiction: 'Federal Republic of Nigeria',
+        venue: 'Abuja',
+        showWatermark: false,
+        vendorName: 'Bankrol Limited',
+        vendorLine1: 'Plot 124, Cadastral Zone B05, Utako',
+        vendorLine2: 'Abuja, FCT · Nigeria',
+        vendorMeta: 'RC 1029384 · acting by its duly authorised officer',
+        vendorSign: 'A. Okafor',
+        vendorSignRole: 'Managing Director, for and on behalf of the Vendor',
+        purchaserName: docClient,
+        purchaserLine1: 'Bankrol Heights, Abuja',
+        purchaserLine2: 'FCT · Nigeria',
+        purchaserMeta: 'In their personal capacity',
+        footerLeft: 'Bankrol Limited · RC 1029384 · legal@bankrol.ng · +234 9 876 5432',
+        schedule: [
+            { n: '1', title: 'Deposit on signing', due: 'On execution of this Agreement', amount: '₦13,500,000', status: 'Paid' },
+            { n: '2', title: 'Second instalment', due: 'On or before 31 July 2026', amount: '₦40,500,000', status: 'Paid' },
+            { n: '3', title: 'Third instalment', due: 'On or before 31 August 2026', amount: '₦40,500,000', status: 'Due' },
+            { n: '4', title: 'Balance on completion', due: 'On or before 30 September 2026', amount: '₦40,500,000', status: 'Scheduled' },
+        ].map((r) => ({ ...r, statusFg: agStatusFg[r.status] || '#9A958B' })),
+    };
     const docSteps = [['1', 'Select Client'], ['2', 'Select Unit'], ['3', 'Document Type'], ['4', 'Generate'], ['5', 'Preview'], ['6', 'Download PDF']].map(([n, label]) => ({ n, label }));
     const docCards = [['gavel', 'Sales Agreement', 'Binding contract between buyer and Bankrol.'], ['mail', 'Offer Letter', 'Formal offer with price and terms.'], ['assignment', 'Allocation Letter', 'Confirms unit allocation to a buyer.'], ['receipt_long', 'Invoice', 'Itemised statement of amounts due.'], ['paid', 'Receipt', 'Proof of a payment received.'], ['workspace_premium', 'Completion Certificate', 'Certifies a finished, handed-over unit.']].map(([icon, name, desc]) => ({ icon, name, desc, onOpen: () => openDoc(name) }));
 
@@ -331,7 +419,7 @@ const v = computed(() => {
         financeKpis, ageing, payments,
         docSteps, docCards, reportTabs, costBars, salesBars,
         moreOpen: s.moreOpen, moreItems, closeMore,
-        docOpen: s.docOpen, doc, closeDoc, printDoc, genReceipt,
+        docOpen: s.docOpen, doc, rcpt, inv, agr, closeDoc, printDoc, genReceipt,
     };
 });
 </script>
@@ -340,8 +428,9 @@ const v = computed(() => {
     <Head title="Bankrol Platform">
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=block" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp:opsz,wght,FILL,GRAD@24,300,0,0&display=block" />
     </Head>
 
     <div :data-theme="state.theme" class="bnk-root" style="min-height:100vh;background:var(--grad),var(--bg);font-family:'Hanken Grotesk',sans-serif;color:var(--text);transition:background .4s ease,color .4s ease;">
@@ -359,9 +448,8 @@ const v = computed(() => {
                 </div>
                 <div style="display:flex;align-items:center;justify-content:center;padding:40px 28px;">
                     <div style="width:100%;max-width:380px;">
-                        <div style="display:flex;align-items:center;gap:13px;margin-bottom:40px;">
-                            <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(168,133,78,.45);border-radius:11px;"><div style="width:14px;height:14px;background:linear-gradient(135deg,var(--goldb),var(--gold));transform:rotate(45deg);border-radius:2px;"></div></div>
-                            <div style="line-height:1;"><div style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:24px;letter-spacing:.26em;color:var(--navyt);">BANKROL</div><div style="font-size:8px;letter-spacing:.18em;color:var(--t3);margin-top:4px;">CONSTRUCTION · INVESTMENT · ENERGY</div></div>
+                        <div style="margin-bottom:40px;">
+                            <img :src="state.theme === 'dark' ? LOGO_DARK : LOGO_LIGHT" alt="Bankrol — Construction, Investment, Energy" style="height:48px;width:auto;max-width:100%;display:block;" />
                         </div>
                         <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:600;color:var(--text);">Welcome back</div>
                         <div style="font-size:13.5px;color:var(--t2);margin-top:6px;">Sign in to your executive command centre</div>
@@ -390,12 +478,11 @@ const v = computed(() => {
             <div id="shell">
                 <!-- SIDEBAR -->
                 <aside id="sidebar" style="position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:24px 18px;border-right:1px solid var(--border);background:var(--card);">
-                    <div style="display:flex;align-items:center;gap:12px;padding:0 6px 22px;">
-                        <div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(168,133,78,.45);border-radius:10px;"><div style="width:13px;height:13px;background:linear-gradient(135deg,var(--goldb),var(--gold));transform:rotate(45deg);border-radius:2px;"></div></div>
-                        <div style="line-height:1;"><div style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:20px;letter-spacing:.24em;color:var(--navyt);">BANKROL</div><div style="font-size:7px;letter-spacing:.12em;color:var(--t3);margin-top:4px;">CONSTRUCTION · INVESTMENT · ENERGY</div></div>
+                    <div style="padding:0 6px 22px;">
+                        <img :src="state.theme === 'dark' ? LOGO_DARK : LOGO_LIGHT" alt="Bankrol — Construction, Investment, Energy" style="height:40px;width:auto;max-width:100%;display:block;" />
                     </div>
                     <nav style="display:flex;flex-direction:column;gap:3px;flex:1;">
-                        <button v-for="(n, i) in v.navItems" :key="i" @click="n.onClick" :style="n.style"><span style="font-family:'Material Symbols Rounded';font-size:20px;">{{ n.icon }}</span><span style="font-size:13.5px;font-weight:600;">{{ n.label }}</span></button>
+                        <button v-for="(n, i) in v.navItems" :key="i" @click="n.onClick" :style="n.style"><span class="nav-ic" style="font-size:21px;">{{ n.icon }}</span><span style="font-size:13.5px;font-weight:600;">{{ n.label }}</span></button>
                     </nav>
                     <button @click="v.toggleTheme" style="display:flex;align-items:center;gap:11px;padding:11px 14px;border-radius:11px;border:1px solid var(--border);background:var(--card2);color:var(--t2);cursor:pointer;font:600 12.5px 'Hanken Grotesk',sans-serif;"><span style="font-family:'Material Symbols Rounded';font-size:18px;">{{ v.themeIcon }}</span>{{ v.themeLabel }}</button>
                 </aside>
@@ -412,6 +499,7 @@ const v = computed(() => {
                             <div id="topbar-search" style="display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--card);border:1px solid var(--border);border-radius:11px;box-shadow:var(--shadow);"><span style="font-family:'Material Symbols Rounded';font-size:18px;color:var(--t3);">search</span><input placeholder="Search projects, clients…" style="border:none;background:transparent;outline:none;font:500 13px 'Hanken Grotesk',sans-serif;color:var(--text);width:200px;" /></div>
                             <button style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--border);border-radius:11px;color:var(--t2);cursor:pointer;box-shadow:var(--shadow);"><span style="font-family:'Material Symbols Rounded';font-size:20px;">notifications</span><span style="position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;padding:0 4px;display:flex;align-items:center;justify-content:center;background:var(--alert);color:#fff;font-size:10px;font-weight:700;border-radius:9px;border:2px solid var(--bg);">5</span></button>
                             <div style="display:flex;align-items:center;gap:10px;padding:4px 5px 4px 14px;background:var(--card);border:1px solid var(--border);border-radius:24px;box-shadow:var(--shadow);"><div style="text-align:right;line-height:1.15;"><div style="font-size:12px;font-weight:600;color:var(--text);">Adunni Okafor</div><div style="font-size:9.5px;color:var(--t3);">Managing Director</div></div><div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--navy),#28406B);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;color:var(--goldb);">AO</div></div>
+                            <button @click="signOut" title="Sign out" aria-label="Sign out" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--border);border-radius:11px;color:var(--t2);cursor:pointer;box-shadow:var(--shadow);"><span style="font-family:'Material Symbols Rounded';font-size:20px;">logout</span></button>
                         </div>
                     </header>
 
@@ -727,14 +815,14 @@ const v = computed(() => {
 
                 <!-- MOBILE BOTTOM NAV -->
                 <nav id="bottomnav" style="position:fixed;bottom:0;left:0;right:0;z-index:50;align-items:center;justify-content:space-around;padding:8px 6px calc(8px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--border);box-shadow:0 -6px 24px rgba(0,0,0,.08);">
-                    <button v-for="(n, i) in v.mobileNav" :key="i" @click="n.onClick" :style="n.style"><span style="font-family:'Material Symbols Rounded';font-size:22px;">{{ n.icon }}</span><span style="font-size:9.5px;font-weight:600;">{{ n.label }}</span></button>
+                    <button v-for="(n, i) in v.mobileNav" :key="i" @click="n.onClick" :style="n.style"><span class="nav-ic" style="font-size:23px;">{{ n.icon }}</span><span style="font-size:9.5px;font-weight:600;">{{ n.label }}</span></button>
                 </nav>
 
                 <!-- MOBILE MORE SHEET -->
                 <div v-if="v.moreOpen" @click="v.closeMore" style="position:fixed;inset:0;z-index:60;background:rgba(10,11,13,.5);display:flex;align-items:flex-end;">
                     <div style="width:100%;background:var(--card);border-radius:20px 20px 0 0;padding:14px 16px calc(18px + env(safe-area-inset-bottom));border-top:1px solid var(--border);box-shadow:0 -10px 40px rgba(0,0,0,.3);">
                         <div style="width:42px;height:4px;border-radius:3px;background:var(--border);margin:2px auto 16px;"></div>
-                        <button v-for="(m, i) in v.moreItems" :key="i" @click="m.onClick" :style="m.style"><span style="font-family:'Material Symbols Rounded';font-size:22px;">{{ m.icon }}</span><span style="font-size:14.5px;font-weight:600;">{{ m.label }}</span></button>
+                        <button v-for="(m, i) in v.moreItems" :key="i" @click="m.onClick" :style="m.style"><span class="nav-ic" style="font-size:23px;">{{ m.icon }}</span><span style="font-size:14.5px;font-weight:600;">{{ m.label }}</span></button>
                     </div>
                 </div>
 
@@ -774,39 +862,269 @@ const v = computed(() => {
 
                 <!-- DOCUMENT PREVIEW MODAL -->
                 <div v-if="v.docOpen" id="doc-modal" style="position:fixed;inset:0;z-index:200;background:rgba(10,11,13,.62);display:flex;flex-direction:column;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 18px;background:var(--card);border-bottom:1px solid var(--border);">
+                    <div id="doc-toolbar" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 18px;background:var(--card);border-bottom:1px solid var(--border);">
                         <div style="display:flex;align-items:center;gap:10px;min-width:0;"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:var(--gold);">draft</span><span style="font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ v.doc.title }} · Preview</span></div>
                         <div style="display:flex;gap:10px;flex:none;">
                             <button @click="v.printDoc" style="display:flex;align-items:center;gap:6px;padding:10px 16px;background:var(--navy);color:#fff;border:none;border-radius:10px;font:600 12px 'Hanken Grotesk',sans-serif;cursor:pointer;"><span style="font-family:'Material Symbols Rounded';font-size:16px;">download</span>Download PDF</button>
                             <button @click="v.closeDoc" style="width:40px;height:40px;border-radius:10px;border:1px solid var(--border);background:var(--card2);color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;"><span style="font-family:'Material Symbols Rounded';font-size:19px;">close</span></button>
                         </div>
                     </div>
-                    <div style="flex:1;overflow:auto;padding:26px 16px 60px;display:flex;justify-content:center;">
-                        <div id="doc-paper" style="width:100%;max-width:760px;background:#fff;color:#1b1b1b;border-radius:6px;box-shadow:0 30px 70px rgba(0,0,0,.45);padding:54px 56px 46px;">
+                    <div id="doc-scroll" style="flex:1;overflow:auto;padding:26px 16px 60px;display:flex;justify-content:center;align-items:flex-start;">
+                        <!-- ===== PAYMENT RECEIPT ===== -->
+                        <div v-if="v.doc.isReceipt" id="doc-paper" class="bnk-rc" style="position:relative;width:100%;max-width:794px;background:#fff;color:#23262B;border-radius:6px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.45);">
+                            <div style="height:4px;background:linear-gradient(90deg,#1C2E4A 0%,#1C2E4A 42%,#A8854E 42%,#C9A86A 72%,#A8854E 100%);"></div>
+                            <div class="rc-x" style="padding:46px 56px 28px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+                                <div style="display:flex;align-items:center;"><img :src="LOGO_LIGHT" alt="Bankrol — Construction, Investment, Energy" style="height:44px;width:auto;display:block;" /></div>
+                                <div style="text-align:right;">
+                                    <div style="font-family:'Poppins',sans-serif;font-weight:600;font-size:30px;line-height:.95;letter-spacing:.01em;color:rgba(35,38,43,.22);">Receipt</div>
+                                    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9A958B;margin-top:8px;letter-spacing:.04em;">No. {{ v.rcpt.receiptNo }}</div>
+                                </div>
+                            </div>
+                            <div class="rc-hero" style="margin:0 56px;padding:30px 34px;border:1px solid rgba(94,115,85,.28);background:rgba(94,115,85,.06);border-radius:14px;position:relative;overflow:hidden;">
+                                <div style="position:absolute;top:24px;right:30px;transform:rotate(-9deg);border:2px solid rgba(94,115,85,.5);color:#5E7355;border-radius:8px;padding:6px 16px;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:20px;letter-spacing:.22em;opacity:.9;">PAID</div>
+                                <div style="display:flex;align-items:center;gap:9px;color:#5E7355;"><span style="font-family:'Material Symbols Rounded';font-size:20px;">check_circle</span><span style="font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;">Payment received in full</span></div>
+                                <div class="rc-amt" style="font-family:'IBM Plex Mono',monospace;font-size:46px;font-weight:600;color:#1C2E4A;margin-top:16px;letter-spacing:-.01em;overflow-wrap:anywhere;">{{ v.rcpt.amountPaid }}</div>
+                                <div style="font-size:13.5px;color:rgba(35,38,43,.6);margin-top:8px;max-width:520px;line-height:1.5;">{{ v.rcpt.paidFor }}</div>
+                            </div>
+                            <div class="rc-x rc-grid" style="padding:30px 56px 0;display:grid;grid-template-columns:1fr 1fr;gap:26px 40px;">
+                                <div>
+                                    <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9A958B;">Received from</div>
+                                    <div style="font-size:15px;font-weight:600;color:#23262B;margin-top:8px;">{{ v.rcpt.payer }}</div>
+                                    <div style="font-size:12.5px;color:rgba(35,38,43,.6);line-height:1.55;margin-top:3px;">{{ v.rcpt.payerLine }}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9A958B;">Date paid</div>
+                                    <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#23262B;margin-top:9px;">{{ v.rcpt.datePaid }}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9A958B;">Payment method</div>
+                                    <div style="font-size:13.5px;color:#23262B;margin-top:9px;">{{ v.rcpt.payMethod }}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9A958B;">Transaction ID</div>
+                                    <div style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:#23262B;margin-top:9px;">{{ v.rcpt.txnId }}</div>
+                                </div>
+                            </div>
+                            <div class="rc-hx" style="height:1px;background:#ECE8E0;margin:30px 56px 0;"></div>
+                            <div class="rc-x" style="padding:24px 56px 0;">
+                                <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9A958B;margin-bottom:6px;">Applied to</div>
+                                <div v-for="(row, i) in v.rcpt.items" :key="i" style="display:flex;align-items:baseline;justify-content:space-between;padding:13px 0;border-bottom:1px solid #F4F1EA;">
+                                    <div style="font-size:14px;color:#23262B;">{{ row.title }}</div>
+                                    <div style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:#23262B;">{{ row.amount }}</div>
+                                </div>
+                                <div style="display:flex;justify-content:flex-end;margin-top:18px;">
+                                    <div style="width:300px;max-width:100%;">
+                                        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:rgba(35,38,43,.6);"><span>Invoice total</span><span style="font-family:'IBM Plex Mono',monospace;color:#23262B;">{{ v.rcpt.invoiceTotal }}</span></div>
+                                        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#5E7355;"><span>Amount paid</span><span style="font-family:'IBM Plex Mono',monospace;">−{{ v.rcpt.amountPaid }}</span></div>
+                                        <div style="height:1px;background:#ECE8E0;margin:9px 0;"></div>
+                                        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;margin:0 -14px;background:rgba(168,133,78,.08);border-radius:9px;"><span style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:#1C2E4A;">Balance remaining</span><span style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:#1C2E4A;">{{ v.rcpt.balance }}</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="rc-x rc-grid" style="padding:34px 56px 0;display:grid;grid-template-columns:1.5fr 1fr;gap:40px;align-items:end;">
+                                <div>
+                                    <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9A958B;">Confirmation</div>
+                                    <div style="font-size:12.5px;color:rgba(35,38,43,.62);line-height:1.6;margin-top:9px;">{{ v.rcpt.note }}</div>
+                                </div>
+                                <div style="text-align:center;">
+                                    <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-style:italic;color:#1C2E4A;border-bottom:1px solid #ECE8E0;padding-bottom:10px;">{{ v.rcpt.signature }}</div>
+                                    <div style="font-size:11px;color:#9A958B;letter-spacing:.05em;margin-top:9px;">{{ v.rcpt.signatureRole }}</div>
+                                </div>
+                            </div>
+                            <div class="rc-x" style="margin-top:38px;padding:22px 56px;background:#1C2E4A;color:rgba(244,241,234,.72);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:11.5px;letter-spacing:.03em;">
+                                <span>{{ v.rcpt.footerLeft }}</span>
+                                <span style="font-family:'IBM Plex Mono',monospace;color:#C9A86A;">{{ v.rcpt.footerRight }}</span>
+                            </div>
+                        </div>
+
+                        <!-- ===== INVOICE ===== -->
+                        <div v-else-if="v.doc.isInvoice" id="doc-paper" class="bnk-rc" style="position:relative;width:100%;max-width:794px;background:#fff;color:#23262B;border-radius:6px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.45);">
+                            <div style="height:4px;background:linear-gradient(90deg,#1C2E4A 0%,#1C2E4A 42%,#A8854E 42%,#C9A86A 72%,#A8854E 100%);"></div>
+                            <div class="rc-x" style="padding:46px 56px 30px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+                                <div style="display:flex;align-items:center;"><img :src="LOGO_LIGHT" alt="Bankrol — Construction, Investment, Energy" style="height:44px;width:auto;display:block;" /></div>
+                                <div style="text-align:right;">
+                                    <div style="font-family:'Poppins',sans-serif;font-weight:600;font-size:30px;line-height:.95;letter-spacing:.01em;color:rgba(35,38,43,.22);">Invoice</div>
+                                    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9A958B;margin-top:8px;letter-spacing:.04em;">{{ v.inv.invoiceNo }}</div>
+                                </div>
+                            </div>
+                            <div class="rc-hx" style="height:1px;background:#ECE8E0;margin:0 56px;"></div>
+                            <div class="rc-x rc-grid" style="padding:26px 56px 0;display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:24px;">
+                                <div>
+                                    <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9A958B;">Billed to</div>
+                                    <div style="font-size:15px;font-weight:600;color:#23262B;margin-top:9px;">{{ v.inv.clientName }}</div>
+                                    <div style="font-size:12.5px;color:rgba(35,38,43,.6);line-height:1.55;margin-top:4px;">{{ v.inv.clientLine1 }}<br />{{ v.inv.clientLine2 }}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9A958B;">Date issued</div>
+                                    <div style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:#23262B;margin-top:9px;">{{ v.inv.dateIssued }}</div>
+                                    <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9A958B;margin-top:18px;">Payment to</div>
+                                    <div style="font-size:13px;color:#23262B;margin-top:7px;">{{ v.inv.payMethod }}</div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9A958B;">Status</div>
+                                    <div style="display:inline-flex;align-items:center;gap:7px;margin-top:9px;padding:7px 13px;border-radius:999px;background:rgba(194,138,46,.13);color:#B07C1E;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border:1px solid rgba(194,138,46,.32);"><span style="font-family:'Material Symbols Rounded';font-size:15px;">schedule</span>Due</div>
+                                    <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9A958B;margin-top:18px;">Reference</div>
+                                    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#23262B;margin-top:7px;">{{ v.inv.reference }}</div>
+                                </div>
+                            </div>
+                            <div class="rc-x" style="padding:32px 56px 0;">
+                                <div class="inv-grid" style="display:grid;grid-template-columns:1fr 78px 130px 140px;gap:14px;padding:0 0 11px;border-bottom:1px solid #ECE8E0;">
+                                    <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9A958B;">Description</div>
+                                    <div class="inv-sec" style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9A958B;text-align:right;">Qty</div>
+                                    <div class="inv-sec" style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9A958B;text-align:right;">Unit</div>
+                                    <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9A958B;text-align:right;">Amount</div>
+                                </div>
+                                <div v-for="(row, i) in v.inv.items" :key="i" class="inv-grid" style="display:grid;grid-template-columns:1fr 78px 130px 140px;gap:14px;padding:17px 0;border-bottom:1px solid #F4F1EA;align-items:baseline;">
+                                    <div>
+                                        <div style="font-size:14px;font-weight:600;color:#23262B;">{{ row.title }}</div>
+                                        <div style="font-size:12px;color:rgba(35,38,43,.55);margin-top:3px;line-height:1.45;">{{ row.detail }}</div>
+                                    </div>
+                                    <div class="inv-sec" style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:rgba(35,38,43,.7);text-align:right;">{{ row.qty }}</div>
+                                    <div class="inv-sec" style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:rgba(35,38,43,.7);text-align:right;">{{ row.unit }}</div>
+                                    <div style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;font-weight:500;color:#23262B;text-align:right;">{{ row.amount }}</div>
+                                </div>
+                            </div>
+                            <div class="rc-x" style="padding:22px 56px 0;display:flex;justify-content:flex-end;">
+                                <div style="width:330px;max-width:100%;">
+                                    <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px;color:rgba(35,38,43,.6);"><span>Subtotal</span><span style="font-family:'IBM Plex Mono',monospace;color:#23262B;">{{ v.inv.subtotal }}</span></div>
+                                    <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px;color:rgba(35,38,43,.6);"><span>{{ v.inv.taxLabel }}</span><span style="font-family:'IBM Plex Mono',monospace;color:#23262B;">{{ v.inv.tax }}</span></div>
+                                    <div style="height:1px;background:#ECE8E0;margin:11px 0;"></div>
+                                    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 14px;margin:0 -14px;background:rgba(168,133,78,.08);border-radius:9px;"><span style="font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600;color:#1C2E4A;">Total due</span><span style="font-family:'IBM Plex Mono',monospace;font-size:21px;font-weight:600;color:#1C2E4A;">{{ v.inv.total }}</span></div>
+                                </div>
+                            </div>
+                            <div class="rc-x rc-grid" style="padding:38px 56px 0;display:grid;grid-template-columns:1.5fr 1fr;gap:40px;align-items:end;">
+                                <div>
+                                    <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9A958B;">Notes</div>
+                                    <div style="font-size:12.5px;color:rgba(35,38,43,.62);line-height:1.6;margin-top:9px;">{{ v.inv.notes }}</div>
+                                </div>
+                                <div style="text-align:center;">
+                                    <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-style:italic;color:#1C2E4A;border-bottom:1px solid #ECE8E0;padding-bottom:10px;">{{ v.inv.signature }}</div>
+                                    <div style="font-size:11px;color:#9A958B;letter-spacing:.05em;margin-top:9px;">{{ v.inv.signatureRole }}</div>
+                                </div>
+                            </div>
+                            <div class="rc-x" style="margin-top:42px;padding:22px 56px;background:#1C2E4A;color:rgba(244,241,234,.72);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:11.5px;letter-spacing:.03em;">
+                                <span>{{ v.inv.footerLeft }}</span>
+                                <span style="font-family:'IBM Plex Mono',monospace;color:#C9A86A;">{{ v.inv.footerRight }}</span>
+                            </div>
+                        </div>
+
+                        <!-- ===== SALE & PURCHASE AGREEMENT (3 pages) ===== -->
+                        <div v-else-if="v.doc.isAgreement" id="doc-paper" class="bnk-agr" style="width:100%;max-width:794px;background:transparent;box-shadow:none;display:flex;flex-direction:column;gap:22px;">
+
+                            <!-- PAGE 1 — COVER -->
+                            <div class="bnk-page" style="position:relative;min-height:1123px;background:#fff;border-radius:6px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.45);display:flex;flex-direction:column;">
+                                <div style="height:4px;background:linear-gradient(90deg,#1C2E4A 0%,#1C2E4A 42%,#A8854E 42%,#C9A86A 72%,#A8854E 100%);"></div>
+                                <div v-if="v.agr.showWatermark" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:0;"><div style="font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:150px;letter-spacing:.18em;color:rgba(28,46,74,.05);transform:rotate(-28deg);">DRAFT</div></div>
+                                <div style="position:relative;z-index:1;padding:64px 64px 0;flex:1;display:flex;flex-direction:column;">
+                                    <div style="display:flex;align-items:center;"><img :src="LOGO_LIGHT" alt="Bankrol — Construction, Investment, Energy" style="height:46px;width:auto;display:block;" /></div>
+                                    <div style="margin-top:88px;">
+                                        <div style="font-size:11px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#A8854E;">{{ v.agr.instrument }}</div>
+                                        <div style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:62px;line-height:1.02;color:#1C2E4A;letter-spacing:.005em;margin-top:14px;">Sale &amp; Purchase<br />Agreement</div>
+                                        <div style="font-size:15px;color:rgba(35,38,43,.62);line-height:1.6;margin-top:22px;max-width:560px;">Made in respect of the property described in the Schedule, by and between the parties named below, on the terms and conditions hereinafter set out.</div>
+                                    </div>
+                                    <div style="margin-top:46px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;padding:24px 0;border-top:1px solid #ECE8E0;border-bottom:1px solid #ECE8E0;">
+                                        <div><div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9A958B;">Agreement no.</div><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#23262B;margin-top:8px;">{{ v.agr.agreementNo }}</div></div>
+                                        <div><div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9A958B;">Date of agreement</div><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#23262B;margin-top:8px;">{{ v.agr.agreementDate }}</div></div>
+                                        <div><div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9A958B;">Consideration</div><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#1C2E4A;font-weight:600;margin-top:8px;">{{ v.agr.totalPrice }}</div></div>
+                                    </div>
+                                    <div style="margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:30px;">
+                                        <div style="padding:24px 26px;border:1px solid #ECE8E0;border-radius:12px;background:#FBFAF6;"><div style="font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#A8854E;">The Vendor</div><div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:#1C2E4A;margin-top:12px;">{{ v.agr.vendorName }}</div><div style="font-size:12.5px;color:rgba(35,38,43,.6);line-height:1.6;margin-top:8px;">{{ v.agr.vendorLine1 }}<br />{{ v.agr.vendorLine2 }}</div><div style="font-size:11px;color:#9A958B;letter-spacing:.04em;margin-top:12px;">{{ v.agr.vendorMeta }}</div></div>
+                                        <div style="padding:24px 26px;border:1px solid #ECE8E0;border-radius:12px;background:#FBFAF6;"><div style="font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#A8854E;">The Purchaser</div><div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:#1C2E4A;margin-top:12px;">{{ v.agr.purchaserName }}</div><div style="font-size:12.5px;color:rgba(35,38,43,.6);line-height:1.6;margin-top:8px;">{{ v.agr.purchaserLine1 }}<br />{{ v.agr.purchaserLine2 }}</div><div style="font-size:11px;color:#9A958B;letter-spacing:.04em;margin-top:12px;">{{ v.agr.purchaserMeta }}</div></div>
+                                    </div>
+                                    <div style="margin-top:34px;">
+                                        <div style="font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#9A958B;">Recitals</div>
+                                        <div style="display:flex;gap:14px;margin-top:14px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#A8854E;min-width:24px;">A</div><div style="font-size:13px;line-height:1.7;color:rgba(35,38,43,.78);">The Vendor is the registered owner of and is lawfully seised of the property described in the Schedule (the <b style="color:#23262B;">&ldquo;Property&rdquo;</b>), free from material encumbrance save as disclosed in writing to the Purchaser.</div></div>
+                                        <div style="display:flex;gap:14px;margin-top:12px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#A8854E;min-width:24px;">B</div><div style="font-size:13px;line-height:1.7;color:rgba(35,38,43,.78);">The Vendor has agreed to sell and the Purchaser has agreed to purchase the Property for the consideration and upon the terms set out in this Agreement.</div></div>
+                                    </div>
+                                </div>
+                                <div style="position:relative;z-index:1;margin-top:30px;padding:18px 64px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #ECE8E0;font-size:10px;color:#9A958B;letter-spacing:.04em;"><span>Bankrol Limited · RC 1029384</span><span style="font-family:'IBM Plex Mono',monospace;letter-spacing:.1em;">PAGE 01 / 03</span><span>Purchaser initials&nbsp;&nbsp;__________</span></div>
+                            </div>
+
+                            <!-- PAGE 2 — TERMS -->
+                            <div class="bnk-page" style="position:relative;min-height:1123px;background:#fff;border-radius:6px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.45);display:flex;flex-direction:column;">
+                                <div style="height:4px;background:linear-gradient(90deg,#1C2E4A 0%,#1C2E4A 42%,#A8854E 42%,#C9A86A 72%,#A8854E 100%);"></div>
+                                <div style="padding:40px 64px 0;flex:1;">
+                                    <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid #ECE8E0;"><div style="display:flex;align-items:center;gap:10px;"><div style="width:9px;height:9px;background:linear-gradient(135deg,#C9A86A,#A8854E);transform:rotate(45deg);border-radius:1px;"></div><span style="font-family:'Cormorant Garamond',serif;letter-spacing:.26em;font-size:15px;font-weight:600;color:#1C2E4A;">{{ v.agr.brand }}</span></div><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;color:#9A958B;">SALE &amp; PURCHASE · {{ v.agr.agreementNo }}</span></div>
+                                    <div style="margin-top:30px;">
+                                        <div style="display:flex;gap:16px;align-items:baseline;"><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:#A8854E;min-width:26px;">01</div><div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:#1C2E4A;">Sale of the Property</div></div>
+                                        <div style="padding-left:42px;margin-top:8px;">
+                                            <div style="display:flex;gap:12px;margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9A958B;min-width:32px;">1.1</div><div style="font-size:13px;line-height:1.7;color:rgba(35,38,43,.78);">The Vendor shall sell and the Purchaser shall purchase the Property, together with all fixtures, fittings and appurtenant rights, free from encumbrances on completion.</div></div>
+                                            <div style="display:flex;gap:12px;margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9A958B;min-width:32px;">1.2</div><div style="font-size:13px;line-height:1.7;color:rgba(35,38,43,.78);">Title shall pass to the Purchaser upon completion and receipt by the Vendor of the full purchase consideration in cleared funds.</div></div>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top:26px;">
+                                        <div style="display:flex;gap:16px;align-items:baseline;"><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:#A8854E;min-width:26px;">02</div><div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:#1C2E4A;">Purchase Price &amp; Payment</div></div>
+                                        <div style="padding-left:42px;margin-top:8px;">
+                                            <div style="display:flex;gap:12px;margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9A958B;min-width:32px;">2.1</div><div style="font-size:13px;line-height:1.7;color:rgba(35,38,43,.78);">The total consideration for the Property is <b style="color:#1C2E4A;">{{ v.agr.totalPrice }}</b> ({{ v.agr.totalWords }}), payable in accordance with the schedule below.</div></div>
+                                            <div style="display:flex;gap:12px;margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9A958B;min-width:32px;">2.2</div><div style="font-size:13px;line-height:1.7;color:rgba(35,38,43,.78);">Time shall be of the essence in respect of each instalment. Any sum not paid by its due date shall attract interest at {{ v.agr.interestRate }} per month until discharged.</div></div>
+                                            <div style="margin-top:18px;border:1px solid #ECE8E0;border-radius:10px;overflow:hidden;">
+                                                <div style="display:grid;grid-template-columns:34px 1fr 150px 96px;gap:12px;padding:11px 16px;background:#FBFAF6;border-bottom:1px solid #ECE8E0;"><div style="font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#9A958B;">#</div><div style="font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#9A958B;">Milestone</div><div style="font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#9A958B;text-align:right;">Amount</div><div style="font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#9A958B;text-align:right;">Status</div></div>
+                                                <div v-for="(row, i) in v.agr.schedule" :key="i" style="display:grid;grid-template-columns:34px 1fr 150px 96px;gap:12px;padding:13px 16px;border-bottom:1px solid #F4F1EA;align-items:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#A8854E;">{{ row.n }}</div><div><div style="font-size:13px;font-weight:600;color:#23262B;">{{ row.title }}</div><div style="font-size:11.5px;color:rgba(35,38,43,.55);margin-top:2px;">{{ row.due }}</div></div><div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#23262B;text-align:right;">{{ row.amount }}</div><div style="text-align:right;"><span :style="'font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:' + row.statusFg + ';'">{{ row.status }}</span></div></div>
+                                                <div style="display:grid;grid-template-columns:34px 1fr 150px 96px;gap:12px;padding:13px 16px;background:rgba(168,133,78,.07);align-items:center;"><div></div><div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:#1C2E4A;">Total consideration</div><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:#1C2E4A;text-align:right;">{{ v.agr.totalPrice }}</div><div></div></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top:26px;">
+                                        <div style="display:flex;gap:16px;align-items:baseline;"><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:#A8854E;min-width:26px;">03</div><div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:#1C2E4A;">Completion</div></div>
+                                        <div style="padding-left:42px;margin-top:8px;">
+                                            <div style="display:flex;gap:12px;margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9A958B;min-width:32px;">3.1</div><div style="font-size:13px;line-height:1.7;color:rgba(35,38,43,.78);">Completion shall take place on or before <b style="color:#23262B;">{{ v.agr.completionDate }}</b>, upon which the Vendor shall deliver vacant possession and execute all documents necessary to vest title in the Purchaser.</div></div>
+                                            <div style="display:flex;gap:12px;margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9A958B;min-width:32px;">3.2</div><div style="font-size:13px;line-height:1.7;color:rgba(35,38,43,.78);">The Vendor shall obtain, at its cost, the Governor&rsquo;s consent to the assignment and shall procure registration of the Deed of Assignment in favour of the Purchaser.</div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="margin-top:24px;padding:18px 64px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #ECE8E0;font-size:10px;color:#9A958B;letter-spacing:.04em;"><span>Bankrol Limited · RC 1029384</span><span style="font-family:'IBM Plex Mono',monospace;letter-spacing:.1em;">PAGE 02 / 03</span><span>Purchaser initials&nbsp;&nbsp;__________</span></div>
+                            </div>
+
+                            <!-- PAGE 3 — WARRANTIES + EXECUTION -->
+                            <div class="bnk-page" style="position:relative;min-height:1123px;background:#fff;border-radius:6px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.45);display:flex;flex-direction:column;">
+                                <div style="height:4px;background:linear-gradient(90deg,#1C2E4A 0%,#1C2E4A 42%,#A8854E 42%,#C9A86A 72%,#A8854E 100%);"></div>
+                                <div style="padding:40px 64px 0;flex:1;">
+                                    <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid #ECE8E0;"><div style="display:flex;align-items:center;gap:10px;"><div style="width:9px;height:9px;background:linear-gradient(135deg,#C9A86A,#A8854E);transform:rotate(45deg);border-radius:1px;"></div><span style="font-family:'Cormorant Garamond',serif;letter-spacing:.26em;font-size:15px;font-weight:600;color:#1C2E4A;">{{ v.agr.brand }}</span></div><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;color:#9A958B;">SALE &amp; PURCHASE · {{ v.agr.agreementNo }}</span></div>
+                                    <div style="margin-top:28px;">
+                                        <div style="display:flex;gap:16px;align-items:baseline;"><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:#A8854E;min-width:26px;">04</div><div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:#1C2E4A;">Warranties &amp; Representations</div></div>
+                                        <div style="padding-left:42px;margin-top:8px;">
+                                            <div style="display:flex;gap:12px;margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9A958B;min-width:32px;">4.1</div><div style="font-size:13px;line-height:1.7;color:rgba(35,38,43,.78);">The Vendor warrants that it has good and marketable title to the Property and full power to sell the same, and that there are no subsisting disputes, charges or adverse claims affecting it.</div></div>
+                                            <div style="display:flex;gap:12px;margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9A958B;min-width:32px;">4.2</div><div style="font-size:13px;line-height:1.7;color:rgba(35,38,43,.78);">The Purchaser warrants that it has inspected the Property and enters into this Agreement on the basis of its own due diligence, save for the warranties expressly given herein.</div></div>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top:24px;">
+                                        <div style="display:flex;gap:16px;align-items:baseline;"><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:#A8854E;min-width:26px;">05</div><div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:#1C2E4A;">Default &amp; Termination</div></div>
+                                        <div style="padding-left:42px;margin-top:8px;">
+                                            <div style="display:flex;gap:12px;margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9A958B;min-width:32px;">5.1</div><div style="font-size:13px;line-height:1.7;color:rgba(35,38,43,.78);">If the Purchaser fails to pay any instalment within {{ v.agr.cureDays }} of its due date, the Vendor may, by written notice, terminate this Agreement and forfeit a sum equal to {{ v.agr.forfeit }} of the price paid as agreed liquidated damages.</div></div>
+                                            <div style="display:flex;gap:12px;margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9A958B;min-width:32px;">5.2</div><div style="font-size:13px;line-height:1.7;color:rgba(35,38,43,.78);">If the Vendor fails to complete in accordance with Clause 3, the Purchaser may rescind and recover all sums paid, together with interest at the rate stated in Clause 2.2.</div></div>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top:24px;">
+                                        <div style="display:flex;gap:16px;align-items:baseline;"><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:#A8854E;min-width:26px;">06</div><div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:#1C2E4A;">Governing Law &amp; Disputes</div></div>
+                                        <div style="padding-left:42px;margin-top:8px;">
+                                            <div style="display:flex;gap:12px;margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9A958B;min-width:32px;">6.1</div><div style="font-size:13px;line-height:1.7;color:rgba(35,38,43,.78);">This Agreement shall be governed by and construed in accordance with the laws of the {{ v.agr.jurisdiction }}.</div></div>
+                                            <div style="display:flex;gap:12px;margin-top:10px;"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9A958B;min-width:32px;">6.2</div><div style="font-size:13px;line-height:1.7;color:rgba(35,38,43,.78);">Any dispute arising out of or in connection with this Agreement shall first be referred to good-faith negotiation, and failing resolution within 30 days, to arbitration in {{ v.agr.venue }} under the applicable arbitration rules.</div></div>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top:34px;padding-top:22px;border-top:1px solid #ECE8E0;">
+                                        <div style="font-family:'Cormorant Garamond',serif;font-size:13px;font-style:italic;color:rgba(35,38,43,.7);">In witness whereof the parties have executed this Agreement on the day and year first above written.</div>
+                                        <div style="margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:40px;">
+                                            <div><div style="font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#A8854E;">Signed for the Vendor</div><div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-style:italic;color:#1C2E4A;margin-top:22px;">{{ v.agr.vendorSign }}</div><div style="height:1px;background:#23262B;margin-top:6px;"></div><div style="font-size:12px;font-weight:600;color:#23262B;margin-top:8px;">{{ v.agr.vendorName }}</div><div style="font-size:11px;color:#9A958B;margin-top:2px;">{{ v.agr.vendorSignRole }}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9A958B;margin-top:10px;">Date&nbsp;&nbsp;____________________</div></div>
+                                            <div><div style="font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#A8854E;">Signed by the Purchaser</div><div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-style:italic;color:rgba(28,46,74,.25);margin-top:22px;">&nbsp;</div><div style="height:1px;background:#23262B;margin-top:6px;"></div><div style="font-size:12px;font-weight:600;color:#23262B;margin-top:8px;">{{ v.agr.purchaserName }}</div><div style="font-size:11px;color:#9A958B;margin-top:2px;">Purchaser</div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9A958B;margin-top:10px;">Date&nbsp;&nbsp;____________________</div></div>
+                                        </div>
+                                        <div style="margin-top:34px;display:grid;grid-template-columns:1fr 1fr;gap:40px;">
+                                            <div><div style="font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#9A958B;">Witness — Vendor</div><div style="height:1px;background:#D9D4C9;margin-top:30px;"></div><div style="display:flex;justify-content:space-between;margin-top:7px;font-size:10.5px;color:#9A958B;"><span>Name &amp; signature</span><span style="font-family:'IBM Plex Mono',monospace;">Date</span></div></div>
+                                            <div><div style="font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#9A958B;">Witness — Purchaser</div><div style="height:1px;background:#D9D4C9;margin-top:30px;"></div><div style="display:flex;justify-content:space-between;margin-top:7px;font-size:10.5px;color:#9A958B;"><span>Name &amp; signature</span><span style="font-family:'IBM Plex Mono',monospace;">Date</span></div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="margin-top:24px;padding:18px 64px;background:#1C2E4A;color:rgba(244,241,234,.72);display:flex;align-items:center;justify-content:space-between;font-size:11px;letter-spacing:.03em;"><span>{{ v.agr.footerLeft }}</span><span style="font-family:'IBM Plex Mono',monospace;color:#C9A86A;letter-spacing:.1em;">PAGE 03 / 03</span></div>
+                            </div>
+                        </div>
+
+                        <!-- ===== STANDARD DOCUMENT SHELL ===== -->
+                        <div v-else id="doc-paper" style="width:100%;max-width:760px;background:#fff;color:#1b1b1b;border-radius:6px;box-shadow:0 30px 70px rgba(0,0,0,.45);padding:54px 56px 46px;">
                             <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1C2E4A;padding-bottom:18px;gap:14px;flex-wrap:wrap;">
-                                <div style="display:flex;align-items:center;gap:12px;"><div style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;border:1px solid #A8854E;border-radius:9px;"><div style="width:14px;height:14px;background:linear-gradient(135deg,#C9A86A,#A8854E);transform:rotate(45deg);border-radius:2px;"></div></div><div style="line-height:1;"><div style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:22px;letter-spacing:.24em;color:#1C2E4A;">BANKROL</div><div style="font-size:7px;letter-spacing:.14em;color:#9A958B;margin-top:4px;">CONSTRUCTION · INVESTMENT · ENERGY</div></div></div>
+                                <div style="display:flex;align-items:center;"><img :src="LOGO_LIGHT" alt="Bankrol — Construction, Investment, Energy" style="height:40px;width:auto;display:block;" /></div>
                                 <div style="text-align:right;font-size:10.5px;color:#777;line-height:1.7;">Plot 124, Cadastral Zone B05, Utako<br />Abuja, FCT, Nigeria<br />RC 1029384 · +234 9 876 5432</div>
                             </div>
                             <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:20px;font-size:11.5px;color:#666;"><div>Ref: <strong style="color:#1b1b1b;">{{ v.doc.ref }}</strong></div><div>Date: <strong style="color:#1b1b1b;">{{ v.doc.date }}</strong></div></div>
                             <div style="font-family:'Cormorant Garamond',serif;font-size:27px;font-weight:600;color:#1C2E4A;margin-top:14px;">{{ v.doc.heading }}</div>
-
-                            <!-- SALES AGREEMENT -->
-                            <template v-if="v.doc.isAgreement">
-                                <p style="font-size:13px;line-height:1.85;color:#333;margin:18px 0 0;">THIS DEED OF SALE is made on {{ v.doc.date }} BETWEEN <strong>Bankrol Limited</strong> (the “Vendor”), AND <strong>{{ v.doc.client }}</strong> (the “Purchaser”).</p>
-                                <div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:#1C2E4A;margin-top:20px;">1. The Property</div>
-                                <p style="font-size:13px;line-height:1.8;color:#333;margin:6px 0 0;">{{ v.doc.property }}, {{ v.doc.dev }}. Land area {{ v.doc.land }}, comprising {{ v.doc.beds }} bedrooms, developed and constructed by Bankrol and sold with full title and all fixtures as inspected.</p>
-                                <div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:#1C2E4A;margin-top:18px;">2. Consideration &amp; Payment Schedule</div>
-                                <p style="font-size:13px;line-height:1.8;color:#333;margin:6px 0 12px;">The total consideration is <strong>{{ v.doc.price }}</strong>, payable as follows:</p>
-                                <div v-for="(r, i) in v.doc.schedule" :key="i" style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #eee;font-size:12.5px;"><span style="color:#444;">{{ r.k }}</span><span style="font-weight:600;color:#1b1b1b;">{{ r.v }}</span></div>
-                                <div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:#1C2E4A;margin-top:18px;">3. Completion &amp; Handover</div>
-                                <p style="font-size:13px;line-height:1.8;color:#333;margin:6px 0 0;">The Vendor shall deliver vacant possession upon receipt of the full consideration, together with all statutory documents of title.</p>
-                                <div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:#1C2E4A;margin-top:18px;">4. Default</div>
-                                <p style="font-size:13px;line-height:1.8;color:#333;margin:6px 0 0;">Failure to meet the schedule above may attract re-allocation of the unit in line with the Vendor’s standard terms.</p>
-                                <div style="display:flex;gap:40px;margin-top:52px;flex-wrap:wrap;">
-                                    <div style="flex:1;min-width:170px;"><div style="border-top:1px solid #333;padding-top:6px;font-size:11.5px;color:#555;">For the Vendor — Bankrol Limited</div></div>
-                                    <div style="flex:1;min-width:170px;"><div style="border-top:1px solid #333;padding-top:6px;font-size:11.5px;color:#555;">The Purchaser — {{ v.doc.client }}</div></div>
-                                </div>
-                            </template>
 
                             <!-- OFFER LETTER -->
                             <template v-if="v.doc.isOffer">
@@ -827,30 +1145,6 @@ const v = computed(() => {
                                 <div v-for="(r, i) in v.doc.allocation" :key="i" style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #eee;font-size:12.5px;"><span style="color:#444;">{{ r.k }}</span><span style="font-weight:600;color:#1b1b1b;">{{ r.v }}</span></div>
                                 <p style="font-size:13px;line-height:1.85;color:#333;margin:16px 0 0;">Our documentation team will be in touch regarding the transfer of title and the handover schedule.</p>
                                 <div style="margin-top:40px;font-size:13px;color:#333;">Sincerely,<div style="font-family:'Cormorant Garamond',serif;font-size:26px;color:#1C2E4A;margin-top:14px;">Adunni Okafor</div><div style="font-size:11.5px;color:#777;margin-top:2px;">Managing Director · Bankrol</div></div>
-                            </template>
-
-                            <!-- INVOICE -->
-                            <template v-if="v.doc.isInvoice">
-                                <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:18px;margin-top:20px;">
-                                    <div><div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#999;">Bill To</div><div style="font-size:14px;font-weight:600;color:#1b1b1b;margin-top:6px;">{{ v.doc.client }}</div><div style="font-size:12px;color:#666;margin-top:3px;">{{ v.doc.property }}</div></div>
-                                    <div style="text-align:right;font-size:12px;color:#666;line-height:1.8;"><div>Invoice No: <strong style="color:#1b1b1b;">{{ v.doc.ref }}</strong></div><div>Issued: <strong style="color:#1b1b1b;">{{ v.doc.date }}</strong></div><div>Due: <strong style="color:#1b1b1b;">07 July 2026</strong></div></div>
-                                </div>
-                                <div style="display:flex;justify-content:space-between;margin-top:24px;padding-bottom:10px;border-bottom:2px solid #1C2E4A;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1C2E4A;"><span>Description</span><span>Amount</span></div>
-                                <div v-for="(r, i) in v.doc.lineItems" :key="i" style="display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid #eee;font-size:13px;"><span style="color:#333;">{{ r.k }}</span><span style="font-weight:600;color:#1b1b1b;">{{ r.v }}</span></div>
-                                <div style="display:flex;justify-content:flex-end;margin-top:18px;"><div style="width:240px;"><div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12.5px;color:#666;"><span>Subtotal</span><span>{{ v.doc.price }}</span></div><div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12.5px;color:#666;">VAT (7.5%)<span>incl.</span></div><div style="display:flex;justify-content:space-between;padding:10px 0;border-top:2px solid #1C2E4A;margin-top:4px;font-size:15px;font-weight:700;color:#1C2E4A;"><span>Total Due</span><span>{{ v.doc.price }}</span></div></div></div>
-                                <div style="margin-top:22px;padding:14px 16px;background:#f7f5f0;border-radius:8px;font-size:11.5px;color:#666;line-height:1.7;">Payable to <strong style="color:#1b1b1b;">Bankrol Limited</strong> · Zenith Bank · 1023 4856 91. Please quote the invoice number on all transfers.</div>
-                            </template>
-
-                            <!-- RECEIPT -->
-                            <template v-if="v.doc.isReceipt">
-                                <div style="text-align:center;margin-top:24px;"><div style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#999;">Amount Received</div><div style="font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:600;color:#1C2E4A;margin-top:6px;line-height:1;">{{ v.doc.amount }}</div></div>
-                                <div style="margin-top:28px;">
-                                    <div v-for="(r, i) in v.doc.receipt" :key="i" style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #eee;font-size:13px;"><span style="color:#777;">{{ r.k }}</span><span style="font-weight:600;color:#1b1b1b;">{{ r.v }}</span></div>
-                                </div>
-                                <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:44px;gap:20px;">
-                                    <div style="flex:1;"><div style="border-top:1px solid #333;padding-top:6px;font-size:11.5px;color:#555;max-width:200px;">Received by — Finance, Bankrol Limited</div></div>
-                                    <div style="width:96px;height:96px;border:2px solid #5E7355;border-radius:50%;display:flex;align-items:center;justify-content:center;transform:rotate(-12deg);color:#5E7355;font-family:'Cormorant Garamond',serif;font-weight:700;font-size:22px;letter-spacing:.06em;flex:none;">PAID</div>
-                                </div>
                             </template>
 
                             <!-- COMPLETION CERTIFICATE -->
@@ -910,6 +1204,8 @@ const v = computed(() => {
 .bnk-root ::-webkit-scrollbar-track { background: transparent; }
 .bnk-rowhover:hover { background: var(--card2) !important; }
 .bnk-cardhover:hover { border-color: var(--gold) !important; }
+/* Premium, sharp navigation icons */
+.nav-ic { font-family: 'Material Symbols Sharp'; font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
 #shell { display: grid; grid-template-columns: var(--rail) 1fr; min-height: 100vh; }
 #bottomnav { display: none; }
 @media (max-width: 880px) {
@@ -920,13 +1216,42 @@ const v = computed(() => {
     #topbar-search { display: none !important; }
     #login-art { display: none !important; }
     .bnk-login-grid { grid-template-columns: 1fr !important; }
-    #doc-paper { padding: 30px 20px !important; }
+    #doc-paper:not(.bnk-rc):not(.bnk-agr) { padding: 30px 20px !important; }
     #drawer-panel { max-width: 100% !important; }
 }
+/* Payment receipt — responsive so nothing clips on narrow screens */
+.bnk-rc .rc-amt { overflow-wrap: anywhere; }
+@media (max-width: 720px) {
+    .bnk-rc .rc-x { padding-left: 22px !important; padding-right: 22px !important; }
+    .bnk-rc .rc-hx { margin-left: 22px !important; margin-right: 22px !important; }
+    .bnk-rc .rc-hero { margin-left: 18px !important; margin-right: 18px !important; padding-left: 20px !important; padding-right: 20px !important; }
+    .bnk-rc .rc-grid { grid-template-columns: 1fr !important; }
+    .bnk-rc .rc-amt { font-size: 32px !important; }
+    .bnk-rc .inv-grid { grid-template-columns: 1fr auto !important; }
+    .bnk-rc .inv-sec { display: none !important; }
+}
+/* Sale agreement — keep the payment table scrollable, never clipped */
+.bnk-agr [style*="34px 1fr 150px 96px"] { min-width: 520px; }
+@media (max-width: 760px) {
+    .bnk-agr [style*="padding:64px 64px"] { padding-left: 22px !important; padding-right: 22px !important; }
+    .bnk-agr [style*="padding:40px 64px"] { padding-left: 22px !important; padding-right: 22px !important; }
+    .bnk-agr [style*="18px 64px"] { padding-left: 22px !important; padding-right: 22px !important; }
+    .bnk-agr [style*="padding-left:42px"] { padding-left: 14px !important; }
+    .bnk-agr [style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
+    .bnk-agr [style*="border-radius:10px;overflow:hidden"] { overflow: auto !important; }
+}
 @media print {
-    body * { visibility: hidden !important; }
-    #doc-paper, #doc-paper * { visibility: visible !important; }
-    #doc-modal { position: absolute !important; inset: auto !important; background: #fff !important; }
-    #doc-paper { position: absolute !important; left: 0; top: 0; width: 100% !important; max-width: none !important; box-shadow: none !important; border-radius: 0 !important; }
+    @page { size: A4 portrait; margin: 12mm; }
+    /* Show only the document, in normal flow so multi-page content paginates */
+    #shell > *:not(#doc-modal) { display: none !important; }
+    #doc-modal { position: static !important; inset: auto !important; z-index: auto !important; background: #fff !important; display: block !important; overflow: visible !important; padding: 0 !important; }
+    #doc-toolbar { display: none !important; }
+    #doc-scroll { display: block !important; overflow: visible !important; padding: 0 !important; height: auto !important; }
+    #doc-paper { position: static !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; overflow: visible !important; box-shadow: none !important; border-radius: 0 !important; }
+    #doc-paper, #doc-paper * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    /* Multi-page agreement: one sheet per page */
+    #doc-paper.bnk-agr { gap: 0 !important; }
+    .bnk-page { box-shadow: none !important; border-radius: 0 !important; overflow: visible !important; min-height: auto !important; break-after: page; page-break-after: always; }
+    .bnk-page:last-child { break-after: auto; page-break-after: auto; }
 }
 </style>

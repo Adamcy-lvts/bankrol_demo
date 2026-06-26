@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Bankrol Dashboard — Data Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1100px 540px at 80% -14%, rgba(201,168,106,.10), transparent 62%),#0A0B0D;color:#F4F1EA;font-family:'Hanken Grotesk',sans-serif;padding:40px 20px 80px}
+  .wrap{max-width:1100px;margin:0 auto}
+  h1{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:40px;margin:0 0 6px;color:#fff}
+  .sub{color:rgba(244,241,234,.55);font-size:14px;margin-bottom:34px;line-height:1.6}
+  h2{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:26px;color:#E3CB97;margin:38px 0 14px;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:10px}
+  .card{background:#121319;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;box-shadow:0 14px 36px rgba(0,0,0,.36);overflow-x:auto}
+  .mermaid{display:flex;justify-content:center}
+  ul{color:rgba(244,241,234,.7);font-size:13.5px;line-height:1.75}
+  code{font-family:ui-monospace,monospace;background:rgba(255,255,255,.06);padding:1px 6px;border-radius:5px;color:#C9A86A}
+  .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#A8854E}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="tag">Bankrol · Construction · Investment · Energy</span>
+  <h1>Dashboard — Data Map</h1>
+  <div class="sub">How each dashboard widget is computed and where the data comes from. Values are demo data today (hard-coded in <code>resources/js/pages/Welcome.vue</code>); the diagrams show the target flow once wired to a Laravel backend.</div>
+
+  <h2>1. Data flow — source → dashboard</h2>
+  <div class="card">
+    <pre class="mermaid">
+flowchart LR
+    subgraph DB["Database (Eloquent models)"]
+        direction TB
+        projects[("projects")]
+        milestones[("milestones")]
+        units[("units")]
+        clients[("clients")]
+        deals[("deals / pipeline")]
+        payments[("payments")]
+        invoices[("invoices")]
+        payables[("payables")]
+        tenders[("tenders")]
+        documents[("documents")]
+    end
+    subgraph SVC["Aggregation layer (period-aware)"]
+        agg["DashboardService<br/>sum / groupBy / scopes<br/>+ Needs-Attention rules"]
+    end
+    ctrl["DashboardController@index<br/>→ Inertia props"]
+    page["Welcome.vue<br/>(dashboard widgets)"]
+    projects --> agg
+    milestones --> agg
+    units --> agg
+    clients --> agg
+    deals --> agg
+    payments --> agg
+    invoices --> agg
+    payables --> agg
+    tenders --> agg
+    documents --> agg
+    agg --> ctrl --> page
+    subgraph WIDGETS["Dashboard widgets"]
+        direction TB
+        k1["KPI · Active Order Book"]
+        k2["KPI · Units Sold (period)"]
+        k3["KPI · Sales Pipeline"]
+        k4["KPI · Net Cash Position"]
+        w1["Estate & Project Portfolio"]
+        w2["Sales Pipeline funnel"]
+        w3["Referral Intelligence"]
+        w4["Inventory · Bankrol Heights"]
+        w5["Build Performance"]
+        w6["Handover & Documentation"]
+        w7["Bid & Tender Pipeline"]
+        w8["Needs Attention"]
+    end
+    page --> k1 & k2 & k3 & k4
+    page --> w1 & w2 & w3 & w4 & w5 & w6 & w7 & w8
+    </pre>
+  </div>
+
+  <h2>2. Widget → metric → source</h2>
+  <div class="card">
+    <pre class="mermaid">
+flowchart TB
+    classDef src fill:#FBFAF6,stroke:#A8854E,color:#1C2E4A;
+    classDef wid fill:#1C2E4A,stroke:#C9A86A,color:#F4F1EA;
+    AOB["Active Order Book<br/>Σ contract_value (active)"]:::wid --> P1[("projects")]:::src
+    US["Units Sold · period<br/>Σ price WHERE sold in period"]:::wid --> U1[("units")]:::src
+    SP["Sales Pipeline<br/>Σ value (negotiation + reserved)"]:::wid --> D1[("deals")]:::src
+    NC["Net Cash Position<br/>receivables − payables"]:::wid --> PAY1[("payments")]:::src
+    NC --> INV1[("invoices")]:::src
+    NC --> PB1[("payables")]:::src
+    PORT["Estate & Project Portfolio<br/>value · build% · health"]:::wid --> P2[("projects")]:::src
+    PORT --> M1[("milestones")]:::src
+    FUN["Sales Pipeline funnel<br/>value + count by stage"]:::wid --> D2[("deals")]:::src
+    REF["Referral Intelligence<br/>close-rate · Σ by referrer"]:::wid --> C1[("clients.referred_by")]:::src
+    REF --> D3[("deals")]:::src
+    INVT["Inventory · Bankrol Heights<br/>units by status"]:::wid --> U2[("units")]:::src
+    BP["Build Performance<br/>cost_to_date vs budget"]:::wid --> P3[("projects")]:::src
+    BP --> M2[("milestones / costs")]:::src
+    HND["Handover & Documentation<br/>4-step status per unit"]:::wid --> DOC1[("documents")]:::src
+    HND --> U3[("units")]:::src
+    TEN["Bid & Tender Pipeline<br/>value · stage · win-rate"]:::wid --> T1[("tenders")]:::src
+    NA["Needs Attention<br/>rules engine"]:::wid --> P4[("projects")]:::src
+    NA --> INV2[("invoices")]:::src
+    NA --> D4[("deals")]:::src
+    NA --> DOC2[("documents")]:::src
+    </pre>
+  </div>
+
+  <h2>3. Entity relationships</h2>
+  <div class="card">
+    <pre class="mermaid">
+erDiagram
+    CLIENTS ||--o{ DEALS : "has"
+    CLIENTS ||--o{ PAYMENTS : "makes"
+    CLIENTS ||--o{ INVOICES : "billed"
+    CLIENTS ||--o{ CLIENTS : "referred_by"
+    PROJECTS ||--o{ UNITS : "contains"
+    PROJECTS ||--o{ MILESTONES : "tracked by"
+    UNITS ||--o{ DEALS : "subject of"
+    UNITS ||--o{ DOCUMENTS : "paperwork"
+    UNITS }o--|| CLIENTS : "buyer"
+    TENDERS }o--|| CLIENTS : "for"
+    SUPPLIERS ||--o{ PAYABLES : "owed"
+    PROJECTS {
+        string name
+        string category
+        bigint contract_value
+        bigint budget
+        string health
+        date target_date
+        string engineer
+    }
+    UNITS {
+        string code
+        string status
+        bigint price
+        fk buyer_id
+    }
+    CLIENTS {
+        string name
+        string status
+        string exec
+        fk referred_by_id
+    }
+    DEALS {
+        string stage
+        bigint value
+    }
+    INVOICES {
+        bigint amount
+        date due_date
+        string status
+    }
+    PAYMENTS {
+        bigint amount
+        string method
+        date paid_at
+    }
+    TENDERS {
+        string name
+        bigint value
+        string stage
+        string outcome
+    }
+    DOCUMENTS {
+        string type
+        string status
+    }
+    MILESTONES {
+        string name
+        string status
+        int pct
+        bigint cost_to_date
+    }
+    </pre>
+  </div>
+
+  <h2>4. Data entry — how the database gets populated</h2>
+  <div class="card">
+    <pre class="mermaid">
+flowchart LR
+    classDef role fill:#1C2E4A,stroke:#C9A86A,color:#F4F1EA;
+    classDef chan fill:#23304A,stroke:#7E93A8,color:#F4F1EA;
+    classDef tbl fill:#FBFAF6,stroke:#A8854E,color:#1C2E4A;
+
+    subgraph SOURCES["Sources"]
+        direction TB
+        sales["Sales &amp; Marketing"]:::role
+        eng["Site Engineers"]:::role
+        fin["Finance team"]:::role
+        biz["Business Development"]:::role
+        adm["Admin / Documentation"]:::role
+        bank["Bank / Payment gateway"]:::role
+        acct["Accounting software"]:::role
+        legacy["Spreadsheets (legacy)"]:::role
+    end
+
+    subgraph CHANNELS["Entry channels"]
+        direction TB
+        webform["In-app web forms"]:::chan
+        mobile["Mobile field app"]:::chan
+        webhook["API / webhook"]:::chan
+        sync["Scheduled sync"]:::chan
+        importing["CSV / Excel import"]:::chan
+        system["System-generated (events)"]:::chan
+    end
+
+    sales --> webform
+    fin --> webform
+    biz --> webform
+    adm --> webform
+    eng --> mobile
+    bank --> webhook
+    acct --> sync
+    legacy --> importing
+
+    webform --> clients[("clients")]:::tbl
+    webform --> deals[("deals")]:::tbl
+    webform --> invoices[("invoices")]:::tbl
+    webform --> payables[("payables")]:::tbl
+    webform --> tenders[("tenders")]:::tbl
+    webform --> projects[("projects")]:::tbl
+    webform --> units[("units")]:::tbl
+    mobile --> milestones[("milestones")]:::tbl
+    mobile --> documents[("documents")]:::tbl
+    webhook --> payments[("payments")]:::tbl
+    sync --> invoices
+    sync --> payables
+    importing --> clients
+    importing --> units
+    importing --> projects
+    system --> documents
+    system --> units
+    </pre>
+  </div>
+
+  <h2>Notes</h2>
+  <ul>
+    <li><b>Derived, not stored:</b> the 4 KPIs, funnel totals, referral close-rate, tender win-rate (<code>won ÷ total</code>) and the Needs-Attention list are computed in the service layer.</li>
+    <li><b>Period filter:</b> the <code>This Month / Quarter / Year</code> toggle date-filters "sold / closed" queries — primarily the Units Sold KPI.</li>
+    <li><b>Wiring path:</b> <code>DashboardController@index</code> runs the aggregations → returns Inertia props → <code>Welcome.vue</code> reads props instead of the hard-coded <code>v</code> arrays.</li>
+  </ul>
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });
+</script>
+</body>
+</html>
