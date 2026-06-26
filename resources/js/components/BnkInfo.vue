@@ -13,6 +13,7 @@ const open = ref(false);
 const btn = ref(null);
 const pop = ref(null);
 const popStyle = ref({});
+let canHover = true;
 
 function place() {
     const b = btn.value, p = pop.value;
@@ -30,13 +31,19 @@ function place() {
 
 function show() { open.value = true; nextTick(place); }
 function hide() { open.value = false; }
-function toggle(e) { e.stopPropagation(); open.value ? hide() : show(); }
+
+// On hover-capable devices, hover already shows it — a click should never
+// toggle it shut (that caused the "click twice" bug). On touch, tap toggles.
+function onClick(e) { e.stopPropagation(); if (canHover) show(); else (open.value ? hide() : show()); }
+function onEnter() { if (canHover) show(); }
+function onLeave() { if (canHover) hide(); }
 
 function onDocDown(e) { if (btn.value && !btn.value.contains(e.target) && pop.value && !pop.value.contains(e.target)) hide(); }
 function onKey(e) { if (e.key === 'Escape') hide(); }
 function onScroll() { if (open.value) hide(); }
 
 onMounted(() => {
+    try { canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches; } catch (e) { /* assume hover */ }
     document.addEventListener('pointerdown', onDocDown, true);
     document.addEventListener('keydown', onKey);
     window.addEventListener('scroll', onScroll, true);
@@ -51,8 +58,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <span class="bnk-info" @mouseenter="show" @mouseleave="hide">
-        <button ref="btn" type="button" class="bnk-info-btn" :aria-label="label" @click="toggle">
+    <span class="bnk-info" @mouseenter="onEnter" @mouseleave="onLeave">
+        <button ref="btn" type="button" class="bnk-info-btn" :aria-label="label" @click="onClick">
             <span class="bnk-info-ms">info</span>
         </button>
         <teleport to="body">
@@ -64,14 +71,17 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.bnk-info { display: inline-flex; align-items: center; }
-.bnk-info-btn { appearance: none; border: 0; cursor: pointer; line-height: 0; display: inline-flex; align-items: center; justify-content: center;
-    /* generous tap target without disturbing layout */
-    width: 26px; height: 26px; margin: -7px -6px; border-radius: 50%;
-    background: var(--golds, rgba(168,133,78,.12)); color: var(--gold, #A8854E); opacity: .9;
-    transition: opacity .15s ease, background .15s ease; -webkit-tap-highlight-color: transparent; }
+.bnk-info { display: inline-flex; align-items: center; margin-left: 5px; vertical-align: middle; }
+.bnk-info-btn {
+    appearance: none; border: 0; cursor: pointer; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; margin: -4px 0; border-radius: 50%; flex: none;
+    background: var(--golds, rgba(168,133,78,.14)); color: var(--gold, #A8854E); opacity: .92;
+    transition: opacity .15s ease, background .15s ease, color .15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
 .bnk-info-btn:hover, .bnk-info-btn:focus-visible { opacity: 1; background: var(--gold, #A8854E); color: #fff; outline: none; }
-.bnk-info-ms { font-family: 'Material Symbols Rounded'; font-size: 15px; }
+.bnk-info-ms { font-family: 'Material Symbols Rounded'; font-size: 14px; line-height: 1; display: block; }
 </style>
 
 <style>
