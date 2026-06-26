@@ -2,6 +2,7 @@
 import { reactive, computed, onMounted, watch, nextTick } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import BnkImageSlot from '@/components/BnkImageSlot.vue';
+import BnkInfo from '@/components/BnkInfo.vue';
 
 // Demo "props" (mirrors the design's configurable props)
 const props = { showReferral: true, defaultPeriod: 'month' };
@@ -23,7 +24,10 @@ const state = reactive({
     portFilter: 'All', clientFilter: 'All', reportTab: 'Sales',
     selClient: null, selProj: null,
     moreOpen: false, drawerOpen: false, drawerProj: null, docOpen: false, docType: null,
+    hintDismissed: false,
 });
+
+function dismissHint() { set({ hintDismissed: true }); try { localStorage.setItem('bnk_hint', '1'); } catch (e) { /* ignore */ } }
 
 function set(patch) { Object.assign(state, patch); }
 function go(screen) { set({ screen, drawerOpen: false }); window.scrollTo(0, 0); }
@@ -71,6 +75,7 @@ onMounted(() => {
     try {
         const t = localStorage.getItem('bnk_theme'); if (t) set({ theme: t });
         const a = localStorage.getItem('bnk_authed'); if (a === '1') set({ authed: true });
+        if (localStorage.getItem('bnk_hint') === '1') set({ hintDismissed: true });
     } catch (e) { /* ignore */ }
     if (props.defaultPeriod && ['month', 'quarter', 'year'].includes(props.defaultPeriod)) set({ period: props.defaultPeriod });
     nextTick(runCountups);
@@ -413,6 +418,11 @@ const v = computed(() => {
                     <!-- ============ DASHBOARD ============ -->
                     <template v-if="v.isDashboard">
                         <div data-screen-label="Dashboard">
+                            <div v-if="!state.hintDismissed" style="display:flex;align-items:center;gap:11px;margin:18px 0 6px;padding:11px 14px;background:var(--golds);border:1px solid rgba(168,133,78,.3);border-radius:12px;">
+                                <span style="font-family:'Material Symbols Rounded';font-size:20px;color:var(--gold);flex:none;">touch_app</span>
+                                <span style="flex:1;font-size:12.5px;line-height:1.45;color:var(--text);font-weight:600;">New here? Tap any <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--gold);color:#fff;vertical-align:middle;"><span style="font-family:'Material Symbols Rounded';font-size:12px;">info</span></span> icon to see what that number means.</span>
+                                <button @click="dismissHint" style="flex:none;padding:7px 13px;background:var(--navy);color:#fff;border:none;border-radius:9px;font:600 12px 'Hanken Grotesk',sans-serif;cursor:pointer;">Got it</button>
+                            </div>
                             <div style="display:flex;align-items:center;gap:3px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:3px;width:max-content;margin:18px 0 4px;box-shadow:var(--shadow);">
                                 <button v-for="(p, i) in v.periods" :key="i" @click="p.onClick" :style="p.style">{{ p.label }}</button>
                             </div>
@@ -420,22 +430,22 @@ const v = computed(() => {
                             <!-- KPI STRIP -->
                             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:18px;">
                                 <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px 26px;box-shadow:var(--shadow);">
-                                    <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Active Order Book</span><span style="font-family:'Material Symbols Rounded';font-size:18px;color:var(--gold);">inventory_2</span></div>
+                                    <div style="display:flex;justify-content:space-between;align-items:center;"><span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Active Order Book<BnkInfo text="Total value of all signed, in-progress work across construction, estates and energy — the company's confirmed workload not yet completed." /></span><span style="font-family:'Material Symbols Rounded';font-size:18px;color:var(--gold);">inventory_2</span></div>
                                     <div style="margin-top:16px;font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(36px,4.6vw,46px);line-height:1;color:var(--text);" data-countup data-value="14.2" data-prefix="₦" data-suffix="B" data-decimals="1">₦14.2B</div>
                                     <div style="font-size:12.5px;color:var(--t2);margin-top:12px;">7 active projects in progress</div>
                                 </div>
                                 <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px 26px;box-shadow:var(--shadow);">
-                                    <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Units Sold · {{ v.periodLabel }}</span><span style="display:inline-flex;align-items:center;gap:2px;font-size:11px;font-weight:700;color:var(--green);background:var(--greens);padding:3px 8px 3px 5px;border-radius:20px;"><span style="font-family:'Material Symbols Rounded';font-size:13px;">arrow_upward</span>+2</span></div>
+                                    <div style="display:flex;justify-content:space-between;align-items:center;"><span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Units Sold · {{ v.periodLabel }}<BnkInfo text="Value of homes sold and handed over in the selected period. Use the This Month / Quarter / Year toggle above to change the window. The +2 chip shows the change versus the previous period." /></span><span style="display:inline-flex;align-items:center;gap:2px;font-size:11px;font-weight:700;color:var(--green);background:var(--greens);padding:3px 8px 3px 5px;border-radius:20px;"><span style="font-family:'Material Symbols Rounded';font-size:13px;">arrow_upward</span>+2</span></div>
                                     <div style="margin-top:16px;font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(36px,4.6vw,46px);line-height:1;color:var(--text);" data-countup data-value="2.1" data-prefix="₦" data-suffix="B" data-decimals="1">₦2.1B</div>
                                     <div style="font-size:12.5px;color:var(--t2);margin-top:12px;">6 homes sold &amp; handed over</div>
                                 </div>
                                 <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px 26px;box-shadow:var(--shadow);">
-                                    <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Sales Pipeline</span><span style="font-family:'Material Symbols Rounded';font-size:18px;color:var(--gold);">filter_alt</span></div>
+                                    <div style="display:flex;justify-content:space-between;align-items:center;"><span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Sales Pipeline<BnkInfo text="Value-weighted total of homes still in play — currently in negotiation or reservation, not yet closed. It's your forward revenue if the active deals convert." /></span><span style="font-family:'Material Symbols Rounded';font-size:18px;color:var(--gold);">filter_alt</span></div>
                                     <div style="margin-top:16px;font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(36px,4.6vw,46px);line-height:1;color:var(--text);" data-countup data-value="4.3" data-prefix="₦" data-suffix="B" data-decimals="1">₦4.3B</div>
                                     <div style="font-size:12.5px;color:var(--t2);margin-top:12px;">homes in negotiation &amp; reservation</div>
                                 </div>
                                 <div style="background:var(--navy);border:1px solid rgba(168,133,78,.3);border-radius:18px;padding:24px 26px;box-shadow:var(--shadow);">
-                                    <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(227,203,151,.7);">Net Cash Position</span><span style="font-family:'Material Symbols Rounded';font-size:18px;color:#E3CB97;">account_balance</span></div>
+                                    <div style="display:flex;justify-content:space-between;align-items:center;"><span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(227,203,151,.7);">Net Cash Position<BnkInfo text="What's owed to you minus what you owe: ₦3.1B receivable less ₦1.4B payable. A quick read on liquidity across the whole business." /></span><span style="font-family:'Material Symbols Rounded';font-size:18px;color:#E3CB97;">account_balance</span></div>
                                     <div style="margin-top:16px;font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(36px,4.6vw,46px);line-height:1;color:#fff;" data-countup data-value="1.7" data-prefix="₦" data-suffix="B" data-decimals="1">₦1.7B</div>
                                     <div style="font-size:12.5px;color:rgba(244,241,234,.6);margin-top:12px;">₦3.1B receivable · ₦1.4B payable</div>
                                 </div>
@@ -444,7 +454,7 @@ const v = computed(() => {
                             <!-- ESTATE & PROJECT PORTFOLIO -->
                             <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px 26px;margin-top:18px;box-shadow:var(--shadow);">
                                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-                                    <div><span style="font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Estate &amp; Project Portfolio</span><div style="font-size:12px;color:var(--t2);margin-top:5px;">Develop · Build · Sell · Handover — everything in progress</div></div>
+                                    <div><span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Estate &amp; Project Portfolio<BnkInfo text="Every active project across the business — develop, build, sell and handover. The coloured dot is project health (green on track, amber at risk, red delayed). Tap a row to open its detail drawer; filter by category with the chips on the right." /></span><div style="font-size:12px;color:var(--t2);margin-top:5px;">Develop · Build · Sell · Handover — everything in progress</div></div>
                                     <div style="display:flex;gap:7px;flex-wrap:wrap;">
                                         <button v-for="(f, i) in v.portFilters" :key="i" @click="f.onClick" :style="f.style">{{ f.label }}</button>
                                     </div>
@@ -465,7 +475,7 @@ const v = computed(() => {
                             <!-- SALES PIPELINE + REFERRAL -->
                             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;margin-top:18px;">
                                 <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px 26px;box-shadow:var(--shadow);">
-                                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;"><div><span style="font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Sales Pipeline</span><div style="font-size:12px;color:var(--t2);margin-top:5px;">Value-weighted · Bankrol Heights units</div></div><span style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--navyt);">₦4.3B</span></div>
+                                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;"><div><span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Sales Pipeline<BnkInfo text="The sales funnel for Bankrol Heights units, from first inquiry through to handover. Each bar is the value and unit count at that stage — the narrowing shows how deals progress toward closing." /></span><div style="font-size:12px;color:var(--t2);margin-top:5px;">Value-weighted · Bankrol Heights units</div></div><span style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--navyt);">₦4.3B</span></div>
                                     <div style="display:flex;flex-direction:column;gap:11px;">
                                         <div v-for="(f, i) in v.funnel" :key="i">
                                             <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;"><span style="font-size:12.5px;font-weight:600;color:var(--text);">{{ f.stage }}</span><span style="font-size:11.5px;color:var(--t2);"><span style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--navyt);">{{ f.value }}</span> · {{ f.count }} units</span></div>
@@ -474,7 +484,7 @@ const v = computed(() => {
                                     </div>
                                 </div>
                                 <div v-if="v.showReferral" style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px 26px;box-shadow:var(--shadow);">
-                                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div><span style="font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Referral Intelligence</span><div style="font-size:12px;color:var(--t2);margin-top:5px;">Your network, with numbers on it</div></div></div>
+                                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div><span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Referral Intelligence<BnkInfo text="How your private network drives sales: the rate at which referrals convert to closed deals, total value closed via referral this year, and the people sending you the most business." /></span><div style="font-size:12px;color:var(--t2);margin-top:5px;">Your network, with numbers on it</div></div></div>
                                     <div style="display:flex;align-items:center;gap:18px;margin:14px 0 18px;padding:14px 16px;background:var(--card2);border-radius:13px;">
                                         <div><div style="font-family:'Cormorant Garamond',serif;font-size:34px;line-height:1;color:var(--gold);">34%</div><div style="font-size:11px;color:var(--t2);margin-top:4px;">referral → close rate</div></div>
                                         <div style="width:1px;height:36px;background:var(--border);"></div>
@@ -490,7 +500,7 @@ const v = computed(() => {
                             <!-- INVENTORY + BUILD PERFORMANCE -->
                             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;margin-top:18px;">
                                 <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px 26px;box-shadow:var(--shadow);">
-                                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;"><div><span style="font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Inventory · Bankrol Heights</span><div style="font-size:12px;color:var(--t2);margin-top:5px;">24 units · what's left to sell</div></div></div>
+                                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;"><div><span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Inventory · Bankrol Heights<BnkInfo text="The 24 units in the estate broken down by status — sold, reserved and still available — with the value of each band. A fast view of what is left to sell." /></span><div style="font-size:12px;color:var(--t2);margin-top:5px;">24 units · what's left to sell</div></div></div>
                                     <div style="display:flex;height:20px;border-radius:7px;overflow:hidden;margin-bottom:18px;">
                                         <div v-for="(i, idx) in v.inventory" :key="idx" :style="i.seg" :title="i.label"></div>
                                     </div>
@@ -499,7 +509,7 @@ const v = computed(() => {
                                     </div>
                                 </div>
                                 <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px 26px;box-shadow:var(--shadow);">
-                                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;"><div><span style="font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Build Performance</span><div style="font-size:12px;color:var(--t2);margin-top:5px;">Cost-to-date vs contract budget</div></div><div style="display:flex;align-items:center;gap:12px;font-size:10.5px;color:var(--t2);"><span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:2px;background:var(--card2);border:1px solid var(--border);"></span>Budget</span><span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:2px;background:var(--gold);"></span>Spent</span></div></div>
+                                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;"><div><span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Build Performance<BnkInfo text="Cost-to-date against the contract budget for each project. The grey bar is the budget, the gold bar is spent so far. A red marker flags projects running over budget." /></span><div style="font-size:12px;color:var(--t2);margin-top:5px;">Cost-to-date vs contract budget</div></div><div style="display:flex;align-items:center;gap:12px;font-size:10.5px;color:var(--t2);"><span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:2px;background:var(--card2);border:1px solid var(--border);"></span>Budget</span><span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:2px;background:var(--gold);"></span>Spent</span></div></div>
                                     <div style="display:flex;flex-direction:column;gap:13px;">
                                         <div v-for="(b, i) in v.buildPerf" :key="i">
                                             <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;"><span style="font-size:12.5px;font-weight:600;color:var(--text);">{{ b.name }}</span><span :style="b.flag">{{ b.note }}</span></div>
@@ -512,7 +522,7 @@ const v = computed(() => {
                             <!-- HANDOVER TRACKER + BID PIPELINE -->
                             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:18px;margin-top:18px;">
                                 <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px 26px;box-shadow:var(--shadow);">
-                                    <div style="margin-bottom:18px;"><span style="font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Handover &amp; Documentation</span><div style="font-size:12px;color:var(--t2);margin-top:5px;">Allocation → Payment → Title → Handover</div></div>
+                                    <div style="margin-bottom:18px;"><span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Handover &amp; Documentation<BnkInfo text="Tracks each sold unit through the four closing steps: Allocation → Payment → Title / C of O → Handover. Green means on track; red flags a step that is overdue and needs attention." /></span><div style="font-size:12px;color:var(--t2);margin-top:5px;">Allocation → Payment → Title → Handover</div></div>
                                     <div v-for="(h, i) in v.handover" :key="i" style="padding:13px 0;border-bottom:1px solid var(--line);">
                                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;"><div><span style="font-size:13px;font-weight:600;color:var(--text);">{{ h.unit }}</span><span style="font-size:11.5px;color:var(--t2);"> · {{ h.buyer }}</span></div><span :style="h.flag">{{ h.note }}</span></div>
                                         <div style="display:flex;align-items:center;">
@@ -522,7 +532,7 @@ const v = computed(() => {
                                     </div>
                                 </div>
                                 <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px 26px;box-shadow:var(--shadow);">
-                                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;"><div><span style="font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Bid &amp; Tender Pipeline</span><div style="font-size:12px;color:var(--t2);margin-top:5px;">Contracting &amp; energy opportunities</div></div><div style="text-align:right;"><div style="font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--gold);line-height:1;">38%</div><div style="font-size:10px;color:var(--t2);margin-top:3px;">win rate</div></div></div>
+                                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;"><div><span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Bid &amp; Tender Pipeline<BnkInfo text="Contracting and energy opportunities you are bidding for, with their value and stage (prequalified, bid submitted, shortlisted). The win rate is the share of past bids won." /></span><div style="font-size:12px;color:var(--t2);margin-top:5px;">Contracting &amp; energy opportunities</div></div><div style="text-align:right;"><div style="font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--gold);line-height:1;">38%</div><div style="font-size:10px;color:var(--t2);margin-top:3px;">win rate</div></div></div>
                                     <div style="display:flex;flex-direction:column;gap:11px;">
                                         <div v-for="(t, i) in v.tenders" :key="i" style="padding:14px 16px;background:var(--card2);border:1px solid var(--border);border-radius:13px;"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;"><span style="font-size:13px;font-weight:600;color:var(--text);">{{ t.name }}</span><span style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--navyt);white-space:nowrap;">{{ t.value }}</span></div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:9px;"><span style="font-size:11.5px;color:var(--t2);">{{ t.client }}</span><span :style="t.stageStyle">{{ t.stage }}</span></div></div>
                                     </div>
@@ -531,7 +541,7 @@ const v = computed(() => {
 
                             <!-- NEEDS ATTENTION -->
                             <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px 26px;margin-top:18px;box-shadow:var(--shadow);">
-                                <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px;"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:var(--alert);">priority_high</span><span style="font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Needs Attention</span></div>
+                                <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px;"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:var(--alert);">priority_high</span><span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);">Needs Attention<BnkInfo text="The system's shortlist of issues to act on now — over-budget projects, delayed milestones, overdue invoices and stalled deals — each with a suggested next action." /></span></div>
                                 <div v-for="(a, i) in v.needsAttention" :key="i" style="display:flex;align-items:center;gap:14px;padding:13px 2px;border-bottom:1px solid var(--line);"><span :style="a.iconWrap"><span style="font-family:'Material Symbols Rounded';font-size:18px;">{{ a.icon }}</span></span><div style="flex:1;min-width:0;"><div style="font-size:13.5px;font-weight:600;color:var(--text);">{{ a.title }}</div><div style="font-size:12px;color:var(--t2);margin-top:3px;">{{ a.sub }}</div></div><span style="font-size:11.5px;font-weight:700;color:var(--gold);white-space:nowrap;cursor:pointer;">{{ a.action }}</span></div>
                             </div>
                         </div>
